@@ -114,19 +114,22 @@
     .editable-formula input {
       text-align: center;
     }
+    #checkboxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
     #checkboxes label {
-      display: block;
+      display: flex;
+      align-items: center;
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 8px;
       background-color: #f8f9fa;
-      margin-bottom: 10px;
       cursor: pointer;
       transition: background-color 0.3s;
-    }
-    
-    #checkboxes label:hover {
-      background-color: #e6f7fa;
+      margin-bottom: 0; /* Eliminamos el margen inferior ya que lo controlamos con gap */
     }
     
     #checkboxes input[type="checkbox"] {
