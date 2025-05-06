@@ -386,11 +386,23 @@
         <p>Contenido de glucosa: ${(volumenSG * 0.05).toFixed(1)}g (${((volumenSG * 0.05)/totalVolumen*100).toFixed(1)}%)</p>
       `;
     }
-
+    // Validar campo de peso en tiempo real
+    document.getElementById("peso").addEventListener("input", function() {
+      const peso = parseFloat(this.value);
+      const btnCalcular = document.getElementById("btnCalcular");
+      
+      if (!isNaN(peso) && peso > 0) {
+        btnCalcular.disabled = false;
+      } else {
+        btnCalcular.disabled = true;
+      }
+    });
+   
     // Main calculation function
     function calcular() {
       const pesoInput = document.getElementById("peso");
-      const peso = parseFloat(pesoInput.value) / 1000; // Convert grams to kilograms
+      const peso = parseFloat(pesoInput.value) / 1000;
+      
       if (isNaN(peso) || peso <= 0) {
         alert("Por favor, ingresa un peso válido mayor a 0.");
         pesoInput.focus();
