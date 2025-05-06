@@ -114,6 +114,24 @@
     .editable-formula input {
       text-align: center;
     }
+    #checkboxes label {
+      display: block;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    #checkboxes label:hover {
+      background-color: #e6f7fa;
+    }
+    
+    #checkboxes input[type="checkbox"] {
+      margin-right: 10px;
+    }
     .info-text {
       font-size: 13px;
       color: #64748b;
@@ -184,18 +202,17 @@
     </div>
     
     <div class="input-group">
-      <label for="condiciones">Condiciones clínicas:</label>
-      <select id="condiciones" multiple onchange="toggleTemperaturas()">
-        <option value="fiebre">Fiebre (>37.5°C)</option>
-        <option value="ambienteCalido">Ambiente caluroso (>31°C)</option>
-        <option value="vm">Ventilación mecánica</option>
-        <option value="hipernatremia">Hipernatremia</option>
-        <option value="edema">Edema</option>
-        <option value="oliguria">Oliguria o IRA</option>
-        <option value="postq">Postquirúrgico / Crítico</option>
-      </select>
-      <p class="info-text">Ctrl+Click para selección múltiple</p>
-    </div>
+  <label for="condiciones">Condiciones clínicas:</label>
+  <div id="checkboxes">
+    <label><input type="checkbox" value="fiebre" onchange="toggleTemperaturas()"> Fiebre (>37.5°C)</label>
+    <label><input type="checkbox" value="ambienteCalido" onchange="toggleTemperaturas()"> Ambiente caluroso (>31°C)</label>
+    <label><input type="checkbox" value="vm"> Ventilación mecánica</label>
+    <label><input type="checkbox" value="hipernatremia"> Hipernatremia</label>
+    <label><input type="checkbox" value="edema"> Edema</label>
+    <label><input type="checkbox" value="oliguria"> Oliguria o IRA</label>
+    <label><input type="checkbox" value="postq"> Postquirúrgico / Crítico</label>
+  </div>
+</div>
     
     <div id="tempFiebre" class="input-group hidden">
       <label for="tempF">Temperatura corporal (°C):</label>
@@ -326,13 +343,14 @@
 
     // Function to toggle temperature input fields based on conditions
     function toggleTemperaturas() {
-      const condiciones = Array.from(
-        document.getElementById("condiciones")?.selectedOptions || []
-      ).map((opt) => opt.value);
-
+      const checkboxes = document.querySelectorAll('#checkboxes input[type="checkbox"]');
+      const condiciones = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+    
       const tempFiebre = document.getElementById("tempFiebre");
       const tempAmbiente = document.getElementById("tempAmbiente");
-
+    
       if (tempFiebre) tempFiebre.classList.toggle("hidden", !condiciones.includes("fiebre"));
       if (tempAmbiente) tempAmbiente.classList.toggle("hidden", !condiciones.includes("ambienteCalido"));
     }
@@ -359,34 +377,36 @@
       `;
     }
 
-    // Main calculation function
-    function calcular() {
+      // Main calculation function
+      function calcular() {
       const pesoInput = document.getElementById("peso");
       if (!pesoInput || pesoInput.value === "") {
         alert("Por favor, ingresa un peso válido mayor a 0.");
         pesoInput?.focus();
         return;
       }
-
-      const peso = parseFloat(pesoInput.value) / 1000; // Convertir gramos a kilogramos
+    
+      const peso = parseFloat(pesoInput.value) / 1000; // Convert grams to kilograms
       if (peso <= 0) {
         alert("Por favor, ingresa un peso válido mayor a 0.");
         pesoInput.focus();
         return;
       }
-
+    
       const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
-      const condiciones = Array.from(document.getElementById("condiciones").selectedOptions).map(opt => opt.value);
+      const condiciones = Array.from(document.querySelectorAll('#checkboxes input[type="checkbox"]'))
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
       const tempF = parseFloat(document.getElementById("tempF")?.value) || 37.5;
       const tempA = parseFloat(document.getElementById("tempA")?.value) || 31;
       
-      // Cálculo de mantenimiento (Holliday-Segar)
+      // Maintenance calculation (Holliday-Segar)
       let mantenimiento = 0;
       if (peso <= 10) mantenimiento = peso * 100;
       else if (peso <= 20) mantenimiento = 1000 + (peso - 10) * 50;
       else mantenimiento = 1500 + (peso - 20) * 20;
       
-      // Ajustes
+      // Adjustments
       let factorMod = 1.0;
       if (condiciones.includes("fiebre") && tempF > 37.5) {
         factorMod += 0.12 * (tempF - 37.5);
@@ -395,7 +415,7 @@
         mantenimiento += Math.floor(mantenimiento / 100) * (tempA - 31) * 30;
       }
       
-      // Condiciones reductoras
+      // Reducing conditions
       if (condiciones.includes("vm")) mantenimiento *= 0.8;
       if (condiciones.includes("hipernatremia")) mantenimiento *= 0.75;
       if (condiciones.includes("edema")) mantenimiento *= 0.75;
@@ -421,21 +441,17 @@
       // Bolo si deshidratación severa
       const bolo = peso * 20;
       
-      // Mostrar resultados
+      // Display results
       document.getElementById("resultContent").innerHTML = `
         <p><strong>Mantenimiento (24h):</strong> ${mantenimiento.toFixed(0)} ml</p>
         <p><strong>Déficit:</strong> ${deficit.toFixed(0)} ml</p>
         <p><strong>Total 24h:</strong> ${total24h.toFixed(0)} ml</p>
         <p><strong>Flujo horario:</strong> ${mantenimientoHora.toFixed(1)} ml/h</p>
-        <p><strong>Requerimientos:</strong></p>
-        <ul>
-          <li>Calorías: ${calorias.toFixed(0)} kcal</li>
-          <li>Glucosa: ${glucosa.toFixed(1)} g</li>
-          <li>Sodio: ${sodio.toFixed(1)} mEq</li>
-          <li>Potasio: ${potasio.toFixed(1)} mEq</li>
-        </ul>
       `;
       
+      document.getElementById("resultado").classList.remove("hidden");
+    }
+            
       // Configurar eventos para campos editables
       document.getElementById("volumenSG").addEventListener("input", actualizarFormula);
       document.getElementById("volumenNaCl").addEventListener("input", actualizarFormula);
