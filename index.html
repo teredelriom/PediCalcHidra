@@ -181,7 +181,18 @@
       .btn, .install-container {
         display: none;
       }
+
+    /* Estilo para el botón de copiar */
+    #btnCopiar {
+      background-color: var(--color-secondary); /* Usa tu color secundario */
+      margin-top: 15px;
     }
+    
+    #btnCopiar:hover {
+      background-color: #2a9a8e; /* Un tono más oscuro para hover */
+    }
+    }
+ 
   </style>
 </head>
 <body>
@@ -265,7 +276,9 @@
         <h3>Corrección de Déficit</h3>
         <p id="boloInfo"></p>
       </div>
-      
+      <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">
+        Copiar Indicaciones
+      </button>
       <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
     </div>
   </div>
@@ -336,21 +349,7 @@
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
 
-    // Function to export the content as an image
-    function exportarImagen() {
-      const resultado = document.getElementById("resultado");
-      if (!resultado) {
-        alert("No hay resultados para exportar.");
-        return;
-      }
-      html2canvas(resultado).then((canvas) => {
-        const enlace = document.createElement("a");
-        enlace.download = "indicacion_hidratacion.png";
-        enlace.href = canvas.toDataURL();
-        enlace.click();
-      });
-    }
-
+   
     // Function to toggle temperature input fields based on conditions
     function toggleTemperaturas() {
       const checkboxes = document.querySelectorAll('#checkboxes input[type="checkbox"]');
@@ -484,7 +483,59 @@
       }
       
       document.getElementById("resultado").classList.remove("hidden");
-      
+
+      function copiarIndicaciones() {
+        // Obtener elementos relevantes
+        const mantenimiento = document.getElementById("resultContent").innerText;
+        const formula = document.getElementById("formulaResult").innerText;
+        const boloInfo = document.getElementById("boloInfo")?.innerText || "";
+        
+        // Crear texto formateado
+        const textoACopiar = `
+          INDICACIONES DE HIDRATACIÓN
+          --------------------------
+                 
+          ${formula}
+          
+          ${boloInfo}
+          
+          Fórmula final: ${document.getElementById("volumenSG").value}ml SG5% + 
+          ${document.getElementById("volumenNaCl").value}ml NaCl10% + 
+          ${document.getElementById("volumenKCl").value}ml KCl10%
+          
+          ${mantenimiento}
+        `;
+        
+        // Copiar al portapapeles
+        navigator.clipboard.writeText(textoACopiar)
+          .then(() => {
+            const btnCopiar = document.getElementById("btnCopiar");
+            btnCopiar.textContent = "¡Copiado!";
+            setTimeout(() => {
+              btnCopiar.textContent = "Copiar Indicaciones";
+            }, 2000);
+          })
+          .catch(err => {
+            console.error("Error al copiar: ", err);
+            alert("No se pudo copiar. Intenta manualmente.");
+          });
+      }
+    
+    // Function to export the content as an image
+    function exportarImagen() {
+      const resultado = document.getElementById("resultado");
+      if (!resultado) {
+        alert("No hay resultados para exportar.");
+        return;
+      }
+      html2canvas(resultado).then((canvas) => {
+        const enlace = document.createElement("a");
+        enlace.download = "indicacion_hidratacion.png";
+        enlace.href = canvas.toDataURL();
+        enlace.click();
+      });
+    }
+
       // Store results in localStorage for persistence
       try {
         localStorage.setItem("resultado", JSON.stringify({
