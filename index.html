@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora Hidratación Pediátrica</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@heroicons/react/solid/esm/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --color-principal: #037F8C;
+      --color-secundario: #36B1BF;
+      --color-acento: #F272A1;
+      --color-claro: #82D0D9;
+    }
+    .switch {
+      appearance: none;
+      width: 2.5rem;
+      height: 1.4rem;
+      background: #ccc;
+      border-radius: 9999px;
+      position: relative;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .switch:checked {
+      background: var(--color-principal);
+    }
+    .switch::before {
+      content: "";
+      position: absolute;
+      top: 0.2rem;
+      left: 0.2rem;
+      width: 1rem;
+      height: 1rem;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+    .switch:checked::before {
+      transform: translateX(1.1rem);
+    }
+    #peso:invalid {
+      border: 2px solid red;
+    }
+    #peso:valid {
+      border: 2px solid green;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #resultado, #resultado * {
+        visibility: visible;
+      }
+      #resultado {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        font-family: Arial, sans-serif;
+        padding: 2rem;
+        background-color: #fff;
+        color: #000;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#EAF8F9] min-h-screen flex flex-col items-center p-4">
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md">
+    <h2 class="text-2xl font-semibold text-[#037F8C] text-center mb-4">Calculadora de Hidratación Pediátrica</h2>
+
+    <!-- Campo de entrada para el peso en gramos -->
+    <div class="mb-4">
+      <label for="peso" class="block text-sm font-medium text-gray-700">Peso en gramos</label>
+      <input type="number" id="peso" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ej: 8500" required />
+    </div>
+
+    <!-- Grado de deshidratación -->
+    <div class="mb-4">
+      <label for="deshidratacion" class="block text-sm font-medium text-gray-700">Grado de deshidratación</label>
+      <select id="deshidratacion" class="mt-1 block w-full p-2 border rounded-md">
+        <option value="0">Sin deshidratación</option>
+        <option value="50">Leve (3-5%)</option>
+        <option value="75">Moderada (6-9%)</option>
+        <option value="100">Severa (>10%)</option>
+      </select>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="mt-4">
+      <button onclick="calcular()" class="w-full bg-[#037F8C] text-white p-2 rounded-md">
+        <i class="h-5 w-5 mr-2 text-white"></i> Calcular
+      </button>
+    </div>
+  </div>
+
+  <!-- Resultado de la calculadora -->
+  <div class="resultado mt-6 bg-white shadow-lg rounded-xl p-4 w-full max-w-xl" id="resultado"></div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').then(registration => {
+          console.log('Service Worker registrado con éxito:', registration);
+        }).catch(error => {
+          console.log('Error al registrar el Service Worker:', error);
+        });
+      });
+    }
+
+    let textoCopia = "";
+
+    // Función para manejar el cálculo y almacenamiento
+    function calcular() {
+      const peso = parseFloat(document.getElementById("peso").value) / 1000;
+      if (!peso || peso <= 0) {
+        alert("Por favor, ingresa un peso válido mayor a 0.");
+        return;
+      }
+
+      const deficitPct = parseFloat(document.getElementById("deshidratacion")?.value || 0);
+      const mantenimiento = peso * 100; // Simplificado para este ejemplo
+      const deficit = peso * deficitPct;
+      const total24h = mantenimiento + deficit;
+
+      // Guardar en localStorage
+      localStorage.setItem('resultado', JSON.stringify({
+        mantenimiento: mantenimiento.toFixed(0),
+        deficit: deficit.toFixed(0),
+        total24h: total24h.toFixed(0)
+      }));
+
+      // Mostrar resultados en la interfaz
+      const resultadoTexto = `Mantenimiento: ${mantenimiento.toFixed(0)} ml\nDéficit: ${deficit.toFixed(0)} ml\nTotal: ${total24h.toFixed(0)} ml`;
+      textoCopia = resultadoTexto;
+      document.getElementById("resultado").innerHTML = `<pre>${resultadoTexto}</pre>`;
+    }
+
+    // Recuperar resultados al cargar
+    window.onload = () => {
+      const storedResult = localStorage.getItem('resultado');
+      if (storedResult) {
+        const resultado = JSON.parse(storedResult);
+        document.getElementById("resultado").innerHTML = `<pre>${JSON.stringify(resultado, null, 2)}</pre>`;
+      }
+    };
+  </script>
+</body>
+</html>

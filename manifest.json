@@ -1,0 +1,21 @@
+{
+  "name": "Calculadora de Hidratación Pediátrica",
+  "short_name": "Hidratación",
+  "description": "Calculadora para hidratación pediátrica, con soporte sin conexión.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#037F8C",
+  "theme_color": "#037F8C",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
