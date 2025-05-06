@@ -167,9 +167,10 @@
     <h1>Calculadora de Hidratación Pediátrica</h1>
     
     <div class="input-group">
-      <label for="peso">Peso (kg):</label>
-      <input type="number" id="peso" placeholder="Ej: 8.5" step="0.1" min="0.1" required>
-      <p class="info-text">Ingrese peso en kilogramos con decimales (ej. 8.5 para 8kg 500g)</p>
+      <label for="peso">Peso (g):</label>
+      <input type="number" id="peso" placeholder="Ej: 8500" step="1" min="100" required>
+      <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p><label for="peso">Peso (g):</label>
+     
     </div>
     
     <div class="input-group">
@@ -367,7 +368,7 @@
         return;
       }
 
-      const peso = parseFloat(pesoInput.value);
+      const peso = parseFloat(pesoInput.value) / 1000; // Convertir gramos a kilogramos
       if (peso <= 0) {
         alert("Por favor, ingresa un peso válido mayor a 0.");
         pesoInput.focus();
