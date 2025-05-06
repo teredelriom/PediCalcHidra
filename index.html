@@ -132,6 +132,11 @@
     #checkboxes input[type="checkbox"] {
       margin-right: 10px;
     }
+    input[type="checkbox"]:focus,
+    button:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
     .info-text {
       font-size: 13px;
       color: #64748b;
@@ -187,7 +192,7 @@
     <div class="input-group">
       <label for="peso">Peso (g):</label>
       <input type="number" id="peso" placeholder="Ej: 8500" step="1" min="100" required>
-      <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p><label for="peso">Peso (g):</label>
+      <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p>
      
     </div>
     
@@ -204,13 +209,13 @@
     <div class="input-group">
   <label for="condiciones">Condiciones clínicas:</label>
   <div id="checkboxes">
-    <label><input type="checkbox" value="fiebre" onchange="toggleTemperaturas()"> Fiebre (>37.5°C)</label>
-    <label><input type="checkbox" value="ambienteCalido" onchange="toggleTemperaturas()"> Ambiente caluroso (>31°C)</label>
-    <label><input type="checkbox" value="vm"> Ventilación mecánica</label>
-    <label><input type="checkbox" value="hipernatremia"> Hipernatremia</label>
-    <label><input type="checkbox" value="edema"> Edema</label>
-    <label><input type="checkbox" value="oliguria"> Oliguria o IRA</label>
-    <label><input type="checkbox" value="postq"> Postquirúrgico / Crítico</label>
+    <label><input type="checkbox" name="condiciones" value="fiebre" onchange="toggleTemperaturas()"> Fiebre (>37.5°C)</label>
+    <label><input type="checkbox" name="condiciones" value="ambienteCalido" onchange="toggleTemperaturas()"> Ambiente caluroso (>31°C)</label>
+    <label><input type="checkbox" name="condiciones" value="vm"> Ventilación mecánica</label>
+    <label><input type="checkbox" name="condiciones" value="hipernatremia"> Hipernatremia</label>
+    <label><input type="checkbox" name="condiciones" value="edema"> Edema</label>
+    <label><input type="checkbox" name="condiciones" value="oliguria"> Oliguria o IRA</label>
+    <label><input type="checkbox" name="condiciones" value="postq"> Postquirúrgico / Crítico</label>
   </div>
 </div>
     
@@ -380,14 +385,8 @@
       // Main calculation function
       function calcular() {
       const pesoInput = document.getElementById("peso");
-      if (!pesoInput || pesoInput.value === "") {
-        alert("Por favor, ingresa un peso válido mayor a 0.");
-        pesoInput?.focus();
-        return;
-      }
-    
       const peso = parseFloat(pesoInput.value) / 1000; // Convert grams to kilograms
-      if (peso <= 0) {
+      if (isNaN(peso) || peso <= 0) {
         alert("Por favor, ingresa un peso válido mayor a 0.");
         pesoInput.focus();
         return;
@@ -453,9 +452,9 @@
     }
             
       // Configurar eventos para campos editables
-      document.getElementById("volumenSG").addEventListener("input", actualizarFormula);
-      document.getElementById("volumenNaCl").addEventListener("input", actualizarFormula);
-      document.getElementById("volumenKCl").addEventListener("input", actualizarFormula);
+      ["volumenSG", "volumenNaCl", "volumenKCl"].forEach(id => {
+        document.getElementById(id).addEventListener("input", actualizarFormula);
+      });
       
       // Configurar fórmula editable
       document.getElementById("volumenSG").addEventListener("input", actualizarFormula);
@@ -478,15 +477,15 @@
       document.getElementById("resultado").classList.remove("hidden");
       
       // Store results in localStorage for persistence
-      localStorage.setItem(
-        "resultado",
-        JSON.stringify({
-          mantenimiento: mantenimiento.toFixed(0),
-          deficit: deficit.toFixed(0),
-          total24h: total24h.toFixed(0),
-        })
-      );
-    }
+        try {
+          localStorage.setItem("resultado", JSON.stringify({
+            mantenimiento: mantenimiento.toFixed(0),
+            deficit: deficit.toFixed(0),
+            total24h: total24h.toFixed(0),
+          }));
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
 
     // Recuperar resultados al cargar
     window.onload = () => {
