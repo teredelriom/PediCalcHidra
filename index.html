@@ -207,17 +207,17 @@
     </div>
     
     <div class="input-group">
-  <label for="condiciones">Condiciones clínicas:</label>
-  <div id="checkboxes">
-    <label><input type="checkbox" name="condiciones" value="fiebre" onchange="toggleTemperaturas()"> Fiebre (>37.5°C)</label>
-    <label><input type="checkbox" name="condiciones" value="ambienteCalido" onchange="toggleTemperaturas()"> Ambiente caluroso (>31°C)</label>
-    <label><input type="checkbox" name="condiciones" value="vm"> Ventilación mecánica</label>
-    <label><input type="checkbox" name="condiciones" value="hipernatremia"> Hipernatremia</label>
-    <label><input type="checkbox" name="condiciones" value="edema"> Edema</label>
-    <label><input type="checkbox" name="condiciones" value="oliguria"> Oliguria o IRA</label>
-    <label><input type="checkbox" name="condiciones" value="postq"> Postquirúrgico / Crítico</label>
-  </div>
-</div>
+      <label for="condiciones">Condiciones clínicas:</label>
+      <div id="checkboxes">
+        <label><input type="checkbox" name="condiciones" value="fiebre" onchange="toggleTemperaturas()"> Fiebre (>37.5°C)</label>
+        <label><input type="checkbox" name="condiciones" value="ambienteCalido" onchange="toggleTemperaturas()"> Ambiente caluroso (>31°C)</label>
+        <label><input type="checkbox" name="condiciones" value="vm"> Ventilación mecánica</label>
+        <label><input type="checkbox" name="condiciones" value="hipernatremia"> Hipernatremia</label>
+        <label><input type="checkbox" name="condiciones" value="edema"> Edema</label>
+        <label><input type="checkbox" name="condiciones" value="oliguria"> Oliguria o IRA</label>
+        <label><input type="checkbox" name="condiciones" value="postq"> Postquirúrgico / Crítico</label>
+      </div>
+    </div>
     
     <div id="tempFiebre" class="input-group hidden">
       <label for="tempF">Temperatura corporal (°C):</label>
@@ -262,6 +262,8 @@
         <h3>Corrección de Déficit</h3>
         <p id="boloInfo"></p>
       </div>
+      
+      <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
     </div>
   </div>
 
@@ -382,8 +384,8 @@
       `;
     }
 
-      // Main calculation function
-      function calcular() {
+    // Main calculation function
+    function calcular() {
       const pesoInput = document.getElementById("peso");
       const peso = parseFloat(pesoInput.value) / 1000; // Convert grams to kilograms
       if (isNaN(peso) || peso <= 0) {
@@ -448,16 +450,8 @@
         <p><strong>Flujo horario:</strong> ${mantenimientoHora.toFixed(1)} ml/h</p>
       `;
       
-      document.getElementById("resultado").classList.remove("hidden");
-    }
-            
-      // Configurar eventos para campos editables
-      ["volumenSG", "volumenNaCl", "volumenKCl"].forEach(id => {
-        document.getElementById(id).addEventListener("input", actualizarFormula);
-      });
-      
       // Configurar fórmula editable
-      document.getElementById("volumenSG").addEventListener("input", actualizarFormula);
+      document.getElementById("volumenSG").value = volumenSG;
       document.getElementById("volumenNaCl").value = volumenNaCl;
       document.getElementById("volumenKCl").value = volumenKCl;
       actualizarFormula();
@@ -477,25 +471,39 @@
       document.getElementById("resultado").classList.remove("hidden");
       
       // Store results in localStorage for persistence
-        try {
-          localStorage.setItem("resultado", JSON.stringify({
-            mantenimiento: mantenimiento.toFixed(0),
-            deficit: deficit.toFixed(0),
-            total24h: total24h.toFixed(0),
-          }));
+      try {
+        localStorage.setItem("resultado", JSON.stringify({
+          mantenimiento: mantenimiento.toFixed(0),
+          deficit: deficit.toFixed(0),
+          total24h: total24h.toFixed(0),
+        }));
       } catch (error) {
         console.error("Error saving to localStorage:", error);
       }
+    }
+
+    // Configurar eventos para campos editables
+    ["volumenSG", "volumenNaCl", "volumenKCl"].forEach(id => {
+      document.getElementById(id).addEventListener("input", actualizarFormula);
+    });
 
     // Recuperar resultados al cargar
-    window.onload = () => {
+    window.addEventListener('DOMContentLoaded', () => {
       const storedResult = localStorage.getItem("resultado");
-      const resultadoElement = document.getElementById("resultado");
-      if (storedResult && resultadoElement) {
-        const resultado = JSON.parse(storedResult);
-        resultadoElement.innerHTML = `<pre>${JSON.stringify(resultado, null, 2)}</pre>`;
+      if (storedResult) {
+        try {
+          const resultado = JSON.parse(storedResult);
+          document.getElementById("resultContent").innerHTML = `
+            <p><strong>Mantenimiento (24h):</strong> ${resultado.mantenimiento} ml</p>
+            <p><strong>Déficit:</strong> ${resultado.deficit} ml</p>
+            <p><strong>Total 24h:</strong> ${resultado.total24h} ml</p>
+          `;
+          document.getElementById("resultado").classList.remove("hidden");
+        } catch (error) {
+          console.error("Error parsing stored result:", error);
+        }
       }
-    };
+    });
   </script>
 </body>
 </html>
