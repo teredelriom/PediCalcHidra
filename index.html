@@ -400,14 +400,19 @@
     // Main calculation function
     function calcular() {
       const pesoInput = document.getElementById("peso");
-      const peso = parseFloat(pesoInput.value) / 1000;
+      const peso = parseFloat(pesoInput.value) / 1000; // Convertir gramos a kg
       
+      // Validar peso
       if (isNaN(peso) || peso <= 0) {
-        alert("Por favor, ingresa un peso válido mayor a 0.");
+        alert("❌ Ingresa un peso válido (mayor a 0)");
         pesoInput.focus();
-        return;
+        return; // Detener la función si no es válido
       }
-    
+      
+      // Si el peso es correcto, calcular y MOSTRAR RESULTADOS
+      const resultadoSection = document.getElementById("resultado");
+      resultadoSection.classList.remove("hidden"); // Mostrar sección
+        
       const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
       const condiciones = Array.from(document.querySelectorAll('#checkboxes input[type="checkbox"]'))
         .filter(checkbox => checkbox.checked)
@@ -483,6 +488,18 @@
       }
       
       document.getElementById("resultado").classList.remove("hidden");
+      document.getElementById("peso").addEventListener("input", function() {
+        const peso = parseFloat(this.value);
+        const btnCalcular = document.getElementById("btnCalcular");
+        const resultadoSection = document.getElementById("resultado");
+        
+        btnCalcular.disabled = isNaN(peso) || peso <= 0;
+        
+        // Ocultar resultados si no hay peso válido
+        if (isNaN(peso) || peso <= 0) {
+          resultadoSection.classList.add("hidden");
+        }
+      });
 
       function copiarIndicaciones() {
         // Obtener elementos relevantes
