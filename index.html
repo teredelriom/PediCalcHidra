@@ -119,7 +119,6 @@
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 10px;
     }
-
     #checkboxes label {
       display: flex;
       align-items: center;
@@ -129,9 +128,8 @@
       background-color: #f8f9fa;
       cursor: pointer;
       transition: background-color 0.3s;
-      margin-bottom: 0; /* Eliminamos el margen inferior ya que lo controlamos con gap */
+      margin-bottom: 0;
     }
-    
     #checkboxes input[type="checkbox"] {
       margin-right: 10px;
     }
@@ -163,6 +161,13 @@
       text-align: center;
       display: none;
     }
+    #btnCopiar {
+      background-color: var(--color-secondary);
+      margin-top: 15px;
+    }
+    #btnCopiar:hover {
+      background-color: #2a9a8e;
+    }
     @media print {
       body * {
         visibility: hidden;
@@ -181,18 +186,7 @@
       .btn, .install-container {
         display: none;
       }
-
-    /* Estilo para el botón de copiar */
-    #btnCopiar {
-      background-color: var(--color-secondary); /* Usa tu color secundario */
-      margin-top: 15px;
     }
-    
-    #btnCopiar:hover {
-      background-color: #2a9a8e; /* Un tono más oscuro para hover */
-    }
-    }
- 
   </style>
 </head>
 <body>
@@ -207,7 +201,6 @@
       <label for="peso">Peso (g):</label>
       <input type="number" id="peso" placeholder="Ej: 8500" step="1" min="100" required>
       <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p>
-     
     </div>
     
     <div class="input-group">
@@ -243,7 +236,7 @@
       <input type="number" id="tempA" placeholder="Ej: 33" step="0.1" min="20" max="50">
     </div>
     
-    <button class="btn" onclick="calcular()">Calcular Hidratación</button>
+    <button id="btnCalcular" class="btn" onclick="calcular()" disabled>Calcular Hidratación</button>
     
     <div id="resultado" class="result-section hidden">
       <h2>Resultados</h2>
@@ -276,9 +269,8 @@
         <h3>Corrección de Déficit</h3>
         <p id="boloInfo"></p>
       </div>
-      <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">
-        Copiar Indicaciones
-      </button>
+      
+      <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">Copiar Indicaciones</button>
       <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
     </div>
   </div>
@@ -328,13 +320,6 @@
       deferredPrompt = null;
     });
 
-    // Check if app is running in standalone mode
-    function isRunningStandalone() {
-      return window.matchMedia('(display-mode: standalone)').matches || 
-             window.navigator.standalone ||
-             document.referrer.includes('android-app://');
-    }
-
     // Online/offline detection
     function updateOnlineStatus() {
       const offlineStatus = document.getElementById('offlineStatus');
@@ -349,8 +334,7 @@
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
 
-   
-    // Function to toggle temperature input fields based on conditions
+    // Function to toggle temperature input fields
     function toggleTemperaturas() {
       const checkboxes = document.querySelectorAll('#checkboxes input[type="checkbox"]');
       const condiciones = Array.from(checkboxes)
@@ -385,160 +369,42 @@
         <p>Contenido de glucosa: ${(volumenSG * 0.05).toFixed(1)}g (${((volumenSG * 0.05)/totalVolumen*100).toFixed(1)}%)</p>
       `;
     }
-    // Validar campo de peso en tiempo real
-    document.getElementById("peso").addEventListener("input", function() {
-      const peso = parseFloat(this.value);
-      const btnCalcular = document.getElementById("btnCalcular");
+
+    // Function to copy indications
+    function copiarIndicaciones() {
+      const mantenimiento = document.getElementById("resultContent").innerText;
+      const formula = document.getElementById("formulaResult").innerText;
+      const boloInfo = document.getElementById("boloInfo")?.innerText || "";
       
-      if (!isNaN(peso) && peso > 0) {
-        btnCalcular.disabled = false;
-      } else {
-        btnCalcular.disabled = true;
-      }
-    });
-   
-    // Main calculation function
-    function calcular() {
-      const pesoInput = document.getElementById("peso");
-      const peso = parseFloat(pesoInput.value) / 1000; // Convertir gramos a kg
-      
-      // Validar peso
-      if (isNaN(peso) || peso <= 0) {
-        alert("❌ Ingresa un peso válido (mayor a 0)");
-        pesoInput.focus();
-        return; // Detener la función si no es válido
-      }
-      
-      // Si el peso es correcto, calcular y MOSTRAR RESULTADOS
-      const resultadoSection = document.getElementById("resultado");
-      resultadoSection.classList.remove("hidden"); // Mostrar sección
+      const textoACopiar = `
+        INDICACIONES DE HIDRATACIÓN
+        --------------------------
+        ${mantenimiento}
         
-      const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
-      const condiciones = Array.from(document.querySelectorAll('#checkboxes input[type="checkbox"]'))
-        .filter(checkbox => checkbox.checked)
-        .map(checkbox => checkbox.value);
-      const tempF = parseFloat(document.getElementById("tempF")?.value) || 37.5;
-      const tempA = parseFloat(document.getElementById("tempA")?.value) || 31;
-      
-      // Maintenance calculation (Holliday-Segar)
-      let mantenimiento = 0;
-      if (peso <= 10) mantenimiento = peso * 100;
-      else if (peso <= 20) mantenimiento = 1000 + (peso - 10) * 50;
-      else mantenimiento = 1500 + (peso - 20) * 20;
-      
-      // Adjustments
-      let factorMod = 1.0;
-      if (condiciones.includes("fiebre") && tempF > 37.5) {
-        factorMod += 0.12 * (tempF - 37.5);
-      }
-      if (condiciones.includes("ambienteCalido") && tempA > 31) {
-        mantenimiento += Math.floor(mantenimiento / 100) * (tempA - 31) * 30;
-      }
-      
-      // Reducing conditions
-      if (condiciones.includes("vm")) mantenimiento *= 0.8;
-      if (condiciones.includes("hipernatremia")) mantenimiento *= 0.75;
-      if (condiciones.includes("edema")) mantenimiento *= 0.75;
-      if (condiciones.includes("oliguria")) mantenimiento *= 0.5;
-      if (condiciones.includes("postq")) mantenimiento *= 0.75;
-      
-      mantenimiento *= factorMod;
-      const deficit = peso * deficitPct;
-      const total24h = mantenimiento + deficit;
-      const mantenimientoHora = mantenimiento / 24;
-      
-      // Requerimientos
-      const calorias = mantenimiento;
-      const glucosa = calorias * 0.05;
-      const sodio = calorias * 0.03;
-      const potasio = calorias * 0.025;
-      
-      // Fórmula estándar
-      const volumenSG = 500;
-      const volumenNaCl = Math.round(sodio / 1.7);
-      const volumenKCl = Math.round(potasio / 1.34);
-      
-      // Bolo si deshidratación severa
-      const bolo = peso * 20;
-      
-      // Display results
-      document.getElementById("resultContent").innerHTML = `
-        <p><strong>Mantenimiento (24h):</strong> ${mantenimiento.toFixed(0)} ml</p>
-        <p><strong>Déficit:</strong> ${deficit.toFixed(0)} ml</p>
-        <p><strong>Total 24h:</strong> ${total24h.toFixed(0)} ml</p>
-        <p><strong>Flujo horario:</strong> ${mantenimientoHora.toFixed(1)} ml/h</p>
+        ${formula}
+        
+        ${boloInfo}
+        
+        Fórmula final: ${document.getElementById("volumenSG").value}ml SG5% + 
+        ${document.getElementById("volumenNaCl").value}ml NaCl10% + 
+        ${document.getElementById("volumenKCl").value}ml KCl10%
       `;
       
-      // Configurar fórmula editable
-      document.getElementById("volumenSG").value = volumenSG;
-      document.getElementById("volumenNaCl").value = volumenNaCl;
-      document.getElementById("volumenKCl").value = volumenKCl;
-      actualizarFormula();
-      
-      // Mostrar bolos si es necesario
-      if (deficitPct >= 75) {
-        document.getElementById("boloSection").classList.remove("hidden");
-        document.getElementById("boloInfo").innerHTML = `
-          <p><strong>Bolo inicial requerido:</strong> SF 0.9% ${bolo.toFixed(0)} ml (20 ml/kg)</p>
-          <p>Administrar en 20-30 minutos. Reevaluar después de cada bolo.</p>
-          <p>Máximo 3 bolos antes de reevaluación.</p>
-        `;
-      } else {
-        document.getElementById("boloSection").classList.add("hidden");
-      }
-      
-      document.getElementById("resultado").classList.remove("hidden");
-      document.getElementById("peso").addEventListener("input", function() {
-        const peso = parseFloat(this.value);
-        const btnCalcular = document.getElementById("btnCalcular");
-        const resultadoSection = document.getElementById("resultado");
-        
-        btnCalcular.disabled = isNaN(peso) || peso <= 0;
-        
-        // Ocultar resultados si no hay peso válido
-        if (isNaN(peso) || peso <= 0) {
-          resultadoSection.classList.add("hidden");
-        }
-      });
+      navigator.clipboard.writeText(textoACopiar)
+        .then(() => {
+          const btnCopiar = document.getElementById("btnCopiar");
+          btnCopiar.textContent = "¡Copiado!";
+          setTimeout(() => {
+            btnCopiar.textContent = "Copiar Indicaciones";
+          }, 2000);
+        })
+        .catch(err => {
+          console.error("Error al copiar: ", err);
+          alert("No se pudo copiar. Intenta manualmente.");
+        });
+    }
 
-      function copiarIndicaciones() {
-        // Obtener elementos relevantes
-        const mantenimiento = document.getElementById("resultContent").innerText;
-        const formula = document.getElementById("formulaResult").innerText;
-        const boloInfo = document.getElementById("boloInfo")?.innerText || "";
-        
-        // Crear texto formateado
-        const textoACopiar = `
-          INDICACIONES DE HIDRATACIÓN
-          --------------------------
-                 
-          ${formula}
-          
-          ${boloInfo}
-          
-          Fórmula final: ${document.getElementById("volumenSG").value}ml SG5% + 
-          ${document.getElementById("volumenNaCl").value}ml NaCl10% + 
-          ${document.getElementById("volumenKCl").value}ml KCl10%
-          
-          ${mantenimiento}
-        `;
-        
-        // Copiar al portapapeles
-        navigator.clipboard.writeText(textoACopiar)
-          .then(() => {
-            const btnCopiar = document.getElementById("btnCopiar");
-            btnCopiar.textContent = "¡Copiado!";
-            setTimeout(() => {
-              btnCopiar.textContent = "Copiar Indicaciones";
-            }, 2000);
-          })
-          .catch(err => {
-            console.error("Error al copiar: ", err);
-            alert("No se pudo copiar. Intenta manualmente.");
-          });
-      }
-    
-    // Function to export the content as an image
+    // Function to export as image
     function exportarImagen() {
       const resultado = document.getElementById("resultado");
       if (!resultado) {
@@ -553,7 +419,98 @@
       });
     }
 
-      // Store results in localStorage for persistence
+    // Validate weight input
+    document.getElementById("peso").addEventListener("input", function() {
+      const peso = parseFloat(this.value);
+      const btnCalcular = document.getElementById("btnCalcular");
+      const resultadoSection = document.getElementById("resultado");
+      
+      btnCalcular.disabled = isNaN(peso) || peso <= 0;
+      
+      if (isNaN(peso) || peso <= 0) {
+        resultadoSection.classList.add("hidden");
+      }
+    });
+
+    // Main calculation function
+    function calcular() {
+      const pesoInput = document.getElementById("peso");
+      const peso = parseFloat(pesoInput.value) / 1000;
+      
+      if (isNaN(peso) || peso <= 0) {
+        alert("❌ Ingresa un peso válido (mayor a 0)");
+        pesoInput.focus();
+        return;
+      }
+      
+      const resultadoSection = document.getElementById("resultado");
+      resultadoSection.classList.remove("hidden");
+        
+      const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
+      const condiciones = Array.from(document.querySelectorAll('#checkboxes input[type="checkbox"]'))
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+      const tempF = parseFloat(document.getElementById("tempF")?.value) || 37.5;
+      const tempA = parseFloat(document.getElementById("tempA")?.value) || 31;
+      
+      let mantenimiento = 0;
+      if (peso <= 10) mantenimiento = peso * 100;
+      else if (peso <= 20) mantenimiento = 1000 + (peso - 10) * 50;
+      else mantenimiento = 1500 + (peso - 20) * 20;
+      
+      let factorMod = 1.0;
+      if (condiciones.includes("fiebre") && tempF > 37.5) {
+        factorMod += 0.12 * (tempF - 37.5);
+      }
+      if (condiciones.includes("ambienteCalido") && tempA > 31) {
+        mantenimiento += Math.floor(mantenimiento / 100) * (tempA - 31) * 30;
+      }
+      
+      if (condiciones.includes("vm")) mantenimiento *= 0.8;
+      if (condiciones.includes("hipernatremia")) mantenimiento *= 0.75;
+      if (condiciones.includes("edema")) mantenimiento *= 0.75;
+      if (condiciones.includes("oliguria")) mantenimiento *= 0.5;
+      if (condiciones.includes("postq")) mantenimiento *= 0.75;
+      
+      mantenimiento *= factorMod;
+      const deficit = peso * deficitPct;
+      const total24h = mantenimiento + deficit;
+      const mantenimientoHora = mantenimiento / 24;
+      
+      const calorias = mantenimiento;
+      const glucosa = calorias * 0.05;
+      const sodio = calorias * 0.03;
+      const potasio = calorias * 0.025;
+      
+      const volumenSG = 500;
+      const volumenNaCl = Math.round(sodio / 1.7);
+      const volumenKCl = Math.round(potasio / 1.34);
+      
+      const bolo = peso * 20;
+      
+      document.getElementById("resultContent").innerHTML = `
+        <p><strong>Mantenimiento (24h):</strong> ${mantenimiento.toFixed(0)} ml</p>
+        <p><strong>Déficit:</strong> ${deficit.toFixed(0)} ml</p>
+        <p><strong>Total 24h:</strong> ${total24h.toFixed(0)} ml</p>
+        <p><strong>Flujo horario:</strong> ${mantenimientoHora.toFixed(1)} ml/h</p>
+      `;
+      
+      document.getElementById("volumenSG").value = volumenSG;
+      document.getElementById("volumenNaCl").value = volumenNaCl;
+      document.getElementById("volumenKCl").value = volumenKCl;
+      actualizarFormula();
+      
+      if (deficitPct >= 75) {
+        document.getElementById("boloSection").classList.remove("hidden");
+        document.getElementById("boloInfo").innerHTML = `
+          <p><strong>Bolo inicial requerido:</strong> SF 0.9% ${bolo.toFixed(0)} ml (20 ml/kg)</p>
+          <p>Administrar en 20-30 minutos. Reevaluar después de cada bolo.</p>
+          <p>Máximo 3 bolos antes de reevaluación.</p>
+        `;
+      } else {
+        document.getElementById("boloSection").classList.add("hidden");
+      }
+      
       try {
         localStorage.setItem("resultado", JSON.stringify({
           mantenimiento: mantenimiento.toFixed(0),
@@ -565,12 +522,12 @@
       }
     }
 
-    // Configurar eventos para campos editables
+    // Set up editable formula fields
     ["volumenSG", "volumenNaCl", "volumenKCl"].forEach(id => {
       document.getElementById(id).addEventListener("input", actualizarFormula);
     });
 
-    // Recuperar resultados al cargar
+    // Load stored results
     window.addEventListener('DOMContentLoaded', () => {
       const storedResult = localStorage.getItem("resultado");
       if (storedResult) {
