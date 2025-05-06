@@ -54,17 +54,6 @@
       border-radius: 8px;
       font-size: 16px;
     }
-    select[multiple] {
-      height: auto;
-      min-height: 120px;
-    }
-    select[multiple] option {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-    }
-    select[multiple] option:checked {
-      background-color: var(--color-light);
-    }
     .btn {
       background-color: var(--color-primary);
       color: white;
@@ -132,11 +121,6 @@
     }
     #checkboxes input[type="checkbox"] {
       margin-right: 10px;
-    }
-    input[type="checkbox"]:focus,
-    button:focus {
-      outline: 2px solid var(--color-primary);
-      outline-offset: 2px;
     }
     .info-text {
       font-size: 13px;
@@ -242,35 +226,38 @@
       <h2>Resultados</h2>
       <div id="resultContent"></div>
       
-        <div class="formula-section">
-          <h3>Fórmula Estándar</h3>
-          <p>SG 5% + NaCl 10% + KCl 10%</p>
-          
+      <div class="formula-section hidden" id="formulaContainer">
+        <h3>Fórmula Estándar</h3>
+        <p>SG 5% + NaCl 10% + KCl 10%</p>
+        
         <div class="editable-formula">
-           <div>
+          <div>
             <label for="volumenSG">SG 5% (ml)</label>
-              <input type="number" id="volumenSG" value="500" min="100" step="50">
-           </div>
-           <div>
+            <input type="number" id="volumenSG" value="500" min="100" step="50">
+          </div>
+          <div>
             <label for="volumenNaCl">NaCl 10% (ml)</label>
-              <input type="number" id="volumenNaCl" min="0" step="1">
-           </div>
-           <div>
+            <input type="number" id="volumenNaCl" min="0" step="1">
+          </div>
+          <div>
             <label for="volumenKCl">KCl 10% (ml)</label>
-              <input type="number" id="volumenKCl" min="0" step="1">
-           </div>
-           </div>
-            <p id="formulaResult"></p>
-            <p id="glucosaInfo"></p>
-          </div>
-          <div id="boloSection" class="bolo-section hidden">
-            <h3>Corrección de Déficit</h3>
-            <p id="boloInfo"></p>
-          </div>
-            <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">Copiar Indicaciones</button>
-            <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
+            <input type="number" id="volumenKCl" min="0" step="1">
           </div>
         </div>
+        
+        <p id="formulaResult"></p>
+        <p id="glucosaInfo"></p>
+      </div>
+      
+      <div id="boloSection" class="bolo-section hidden">
+        <h3>Corrección de Déficit</h3>
+        <p id="boloInfo"></p>
+      </div>
+      
+      <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">Copiar Indicaciones</button>
+      <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
+    </div>
+  </div>
 
   <div id="offlineStatus" class="offline-status">
     Estás trabajando sin conexión. Los cambios se sincronizarán cuando vuelvas a estar en línea.
@@ -421,11 +408,13 @@
       const peso = parseFloat(this.value);
       const btnCalcular = document.getElementById("btnCalcular");
       const resultadoSection = document.getElementById("resultado");
+      const formulaSection = document.getElementById("formulaContainer");
       
       btnCalcular.disabled = isNaN(peso) || peso <= 0;
       
       if (isNaN(peso) || peso <= 0) {
         resultadoSection.classList.add("hidden");
+        formulaSection.classList.add("hidden");
       }
     });
 
@@ -441,7 +430,10 @@
       }
       
       const resultadoSection = document.getElementById("resultado");
+      const formulaSection = document.getElementById("formulaContainer");
+      
       resultadoSection.classList.remove("hidden");
+      formulaSection.classList.remove("hidden");
         
       const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
       const condiciones = Array.from(document.querySelectorAll('#checkboxes input[type="checkbox"]'))
@@ -536,6 +528,7 @@
             <p><strong>Total 24h:</strong> ${resultado.total24h} ml</p>
           `;
           document.getElementById("resultado").classList.remove("hidden");
+          document.getElementById("formulaContainer").classList.remove("hidden");
         } catch (error) {
           console.error("Error parsing stored result:", error);
         }
