@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#037F8C"/>
+  <meta name="description" content="Calculadora de Hidratación Pediátrica - Herramienta para cálculo de fluidos en pacientes pediátricos">
   <title>Calculadora Hidratación Pediátrica</title>
   <link rel="manifest" href="manifest.json" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -10,224 +12,421 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-      --color-principal: #037F8C;
-      --color-secundario: #36B1BF;
-      --color-acento: #F272A1;
-      --color-claro: #82D0D9;
+      --color-primary: #037F8C;
+      --color-secondary: #36B1BF;
+      --color-accent: #F272A1;
+      --color-light: #82D0D9;
+      --color-alert: #FF6B6B;
     }
-    .switch {
-      appearance: none;
-      width: 2.5rem;
-      height: 1.4rem;
-      background: #ccc;
-      border-radius: 9999px;
-      position: relative;
-      outline: none;
-      cursor: pointer;
-      transition: background 0.3s;
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f9fa;
+      padding: 20px;
+      margin: 0;
+      line-height: 1.6;
     }
-    .switch:checked {
-      background: var(--color-principal);
-    }
-    .switch::before {
-      content: "";
-      position: absolute;
-      top: 0.2rem;
-      left: 0.2rem;
-      width: 1rem;
-      height: 1rem;
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
       background: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .switch:checked::before {
-      transform: translateX(1.1rem);
+    h1 {
+      color: var(--color-primary);
+      text-align: center;
+      margin-bottom: 25px;
     }
-    #peso:invalid {
-      border: 2px solid red;
+    .input-group {
+      margin-bottom: 20px;
     }
-    #peso:valid {
-      border: 2px solid green;
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    select[multiple] {
+      height: auto;
+      min-height: 120px;
+    }
+    select[multiple] option {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    select[multiple] option:checked {
+      background-color: var(--color-light);
+    }
+    .btn {
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .btn:hover {
+      background-color: #036a75;
+    }
+    .btn-install {
+      background-color: var(--color-accent);
+      margin-bottom: 15px;
+    }
+    .result-section {
+      margin-top: 30px;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid var(--color-primary);
+    }
+    .formula-section {
+      background: #f0fdf4;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      border-left: 4px solid #10b981;
+    }
+    .bolo-section {
+      background: #fff4f6;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      border-left: 4px solid var(--color-accent);
+    }
+    .editable-formula {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .editable-formula input {
+      text-align: center;
+    }
+    .info-text {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+    .install-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .offline-status {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--color-alert);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      display: none;
     }
     @media print {
       body * {
         visibility: hidden;
       }
-      #resultado, #resultado * {
+      .container, .container * {
         visibility: visible;
       }
-      #resultado {
+      .container {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
-        font-family: Arial, sans-serif;
-        padding: 2rem;
-        background-color: #fff;
-        color: #000;
+        padding: 20px;
+        box-shadow: none;
+      }
+      .btn, .install-container {
+        display: none;
       }
     }
   </style>
 </head>
-<body class="bg-[#EAF8F9] min-h-screen flex flex-col items-center p-4">
-  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md">
-    <h2 class="text-2xl font-semibold text-[#037F8C] text-center mb-4">Calculadora de Hidratación Pediátrica</h2>
-
-    <!-- Campo de entrada para el peso en gramos -->
-    <div class="mb-4">
-      <label for="peso" class="block text-sm font-medium text-gray-700">Peso en gramos</label>
-      <input type="number" id="peso" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ej: 8500" required />
+<body>
+  <div class="container">
+    <div id="installContainer" class="install-container hidden">
+      <button id="installBtn" class="btn btn-install">Instalar Aplicación</button>
     </div>
-
-    <!-- Grado de deshidratación -->
-    <div class="mb-4">
-      <label for="deshidratacion" class="block text-sm font-medium text-gray-700">Grado de deshidratación</label>
-      <select id="deshidratacion" class="mt-1 block w-full p-2 border rounded-md">
+    
+    <h1>Calculadora de Hidratación Pediátrica</h1>
+    
+    <div class="input-group">
+      <label for="peso">Peso (kg):</label>
+      <input type="number" id="peso" placeholder="Ej: 8.5" step="0.1" min="0.1" required>
+      <p class="info-text">Ingrese peso en kilogramos con decimales (ej. 8.5 para 8kg 500g)</p>
+    </div>
+    
+    <div class="input-group">
+      <label for="deshidratacion">Grado de deshidratación:</label>
+      <select id="deshidratacion">
         <option value="0">Sin deshidratación</option>
         <option value="50">Leve (3-5%)</option>
         <option value="75">Moderada (6-9%)</option>
         <option value="100">Severa (>10%)</option>
       </select>
     </div>
- <!-- Condiciones clínicas -->
-    <div class="mb-4">
-      <label for="condiciones" class="block text-sm font-medium text-gray-700">Condiciones clínicas (selección múltiple)</label>
-      <div class="space-y-2">
-        <label class="flex items-center">
-          <input type="checkbox" value="fiebre" class="mr-2" onchange="toggleTemperaturas()" /> Fiebre (>37.5°C)
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" value="ambienteCalido" class="mr-2" onchange="toggleTemperaturas()" /> Ambiente caluroso (>31°C)
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" value="vm" class="mr-2" /> Ventilación mecánica
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" value="hipernatremia" class="mr-2" /> Hipernatremia
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" value="edema" class="mr-2" /> Edema
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" value="oliguria" class="mr-2" /> Oliguria o IRA
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" value="postq" class="mr-2" /> Postquirúrgico / Crítico
-        </label>
+    
+    <div class="input-group">
+      <label for="condiciones">Condiciones clínicas:</label>
+      <select id="condiciones" multiple onchange="toggleTemperaturas()">
+        <option value="fiebre">Fiebre (>37.5°C)</option>
+        <option value="ambienteCalido">Ambiente caluroso (>31°C)</option>
+        <option value="vm">Ventilación mecánica</option>
+        <option value="hipernatremia">Hipernatremia</option>
+        <option value="edema">Edema</option>
+        <option value="oliguria">Oliguria o IRA</option>
+        <option value="postq">Postquirúrgico / Crítico</option>
+      </select>
+      <p class="info-text">Ctrl+Click para selección múltiple</p>
+    </div>
+    
+    <div id="tempFiebre" class="input-group hidden">
+      <label for="tempF">Temperatura corporal (°C):</label>
+      <input type="number" id="tempF" placeholder="Ej: 38.5" step="0.1" min="35" max="42">
+    </div>
+    
+    <div id="tempAmbiente" class="input-group hidden">
+      <label for="tempA">Temperatura ambiental (°C):</label>
+      <input type="number" id="tempA" placeholder="Ej: 33" step="0.1" min="20" max="50">
+    </div>
+    
+    <button class="btn" onclick="calcular()">Calcular Hidratación</button>
+    
+    <div id="resultado" class="result-section hidden">
+      <h2>Resultados</h2>
+      <div id="resultContent"></div>
+      
+      <div class="formula-section">
+        <h3>Fórmula Estándar</h3>
+        <p>SG 5% + NaCl 10% + KCl 10%</p>
+        
+        <div class="editable-formula">
+          <div>
+            <label for="volumenSG">SG 5% (ml)</label>
+            <input type="number" id="volumenSG" value="500" min="100" step="50">
+          </div>
+          <div>
+            <label for="volumenNaCl">NaCl 10% (ml)</label>
+            <input type="number" id="volumenNaCl" min="0" step="1">
+          </div>
+          <div>
+            <label for="volumenKCl">KCl 10% (ml)</label>
+            <input type="number" id="volumenKCl" min="0" step="1">
+          </div>
+        </div>
+        
+        <p id="formulaResult"></p>
+        <p id="glucosaInfo"></p>
       </div>
-    </div>
-
-    <!-- Temperatura corporal y ambiental -->
-    <div id="tempFiebre" class="hidden mb-4">
-      <label for="tempF" class="block text-sm font-medium text-gray-700">Temperatura corporal (°C)</label>
-      <input type="number" id="tempF" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ej: 38.5" />
-    </div>
-    <div id="tempAmbiente" class="hidden mb-4">
-      <label for="tempA" class="block text-sm font-medium text-gray-700">Temperatura ambiental (°C)</label>
-      <input type="number" id="tempA" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ej: 33" />
-    </div>
-
-    <!-- Botones de acción -->
-    <div class="mt-4">
-      <button onclick="calcular()" class="w-full bg-[#037F8C] text-white p-2 rounded-md">
-        <i class="h-5 w-5 mr-2 text-white"></i> Calcular
-      </button>
+      
+      <div id="boloSection" class="bolo-section hidden">
+        <h3>Corrección de Déficit</h3>
+        <p id="boloInfo"></p>
+      </div>
     </div>
   </div>
 
-  <!-- Resultado de la calculadora -->
-  <div class="resultado mt-6 bg-white shadow-lg rounded-xl p-4 w-full max-w-xl" id="resultado"></div>
+  <div id="offlineStatus" class="offline-status">
+    Estás trabajando sin conexión. Los cambios se sincronizarán cuando vuelvas a estar en línea.
+  </div>
 
   <script>
+    // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js').then(registration => {
-          console.log('Service Worker registrado con éxito:', registration);
-        }).catch(error => {
-          console.log('Error al registrar el Service Worker:', error);
-        });
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful');
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
       });
     }
 
-    let textoCopia = "";
- function toggleTemperaturas() {
-      const checkboxes = document.querySelectorAll('#condiciones input[type=checkbox]');
-      let condiciones = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+    // Handle PWA installation
+    let deferredPrompt;
+    const installContainer = document.getElementById('installContainer');
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installContainer.classList.remove('hidden');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installContainer.classList.add('hidden');
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installContainer.classList.add('hidden');
+      deferredPrompt = null;
+    });
+
+    // Check if app is running in standalone mode
+    function isRunningStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || 
+             window.navigator.standalone ||
+             document.referrer.includes('android-app://');
+    }
+
+    // Online/offline detection
+    function updateOnlineStatus() {
+      const offlineStatus = document.getElementById('offlineStatus');
+      if (navigator.onLine) {
+        offlineStatus.style.display = 'none';
+      } else {
+        offlineStatus.style.display = 'block';
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Calculator functions
+    function toggleTemperaturas() {
+      const condiciones = Array.from(document.getElementById("condiciones").selectedOptions).map(opt => opt.value);
       document.getElementById("tempFiebre").classList.toggle("hidden", !condiciones.includes("fiebre"));
       document.getElementById("tempAmbiente").classList.toggle("hidden", !condiciones.includes("ambienteCalido"));
     }
-
+    
     function calcular() {
-      const peso = parseFloat(document.getElementById("peso").value) / 1000;
+      const peso = parseFloat(document.getElementById("peso").value);
       if (!peso || peso <= 0) {
-        alert("Por favor, ingresa un peso válido mayor a 0.");
+        alert("Ingrese un peso válido");
         return;
       }
-
-      const deficitPct = parseFloat(document.getElementById("deshidratacion")?.value || 0);
-      const checkboxes = document.querySelectorAll('#condiciones input[type=checkbox]');
-      let condiciones = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+      
+      const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
+      const condiciones = Array.from(document.getElementById("condiciones").selectedOptions).map(opt => opt.value);
       const tempF = parseFloat(document.getElementById("tempF")?.value) || 37.5;
       const tempA = parseFloat(document.getElementById("tempA")?.value) || 31;
-
+      
+      // Cálculo de mantenimiento (Holliday-Segar)
       let mantenimiento = 0;
       if (peso <= 10) mantenimiento = peso * 100;
       else if (peso <= 20) mantenimiento = 1000 + (peso - 10) * 50;
       else mantenimiento = 1500 + (peso - 20) * 20;
-
+      
+      // Ajustes
       let factorMod = 1.0;
-      if (condiciones.includes("fiebre") && tempF > 37.5) factorMod += 0.12 * (tempF - 37.5);
-      if (condiciones.includes("ambienteCalido") && tempA > 31) mantenimiento += Math.floor(mantenimiento / 100) * (tempA - 31) * 30;
-
-      let condicionesReductoras = ["vm", "hipernatremia", "edema", "oliguria", "postq"];
-      let countReductoras = condiciones.filter(c => condicionesReductoras.includes(c)).length;
-      if (countReductoras >= 2) {
-        alert("⚠️ Precaución: múltiples condiciones que reducen volumen pueden subestimar el requerimiento total.");
+      if (condiciones.includes("fiebre") && tempF > 37.5) {
+        factorMod += 0.12 * (tempF - 37.5);
       }
-
+      if (condiciones.includes("ambienteCalido") && tempA > 31) {
+        mantenimiento += Math.floor(mantenimiento / 100) * (tempA - 31) * 30;
+      }
+      
+      // Condiciones reductoras
       if (condiciones.includes("vm")) mantenimiento *= 0.8;
       if (condiciones.includes("hipernatremia")) mantenimiento *= 0.75;
       if (condiciones.includes("edema")) mantenimiento *= 0.75;
       if (condiciones.includes("oliguria")) mantenimiento *= 0.5;
       if (condiciones.includes("postq")) mantenimiento *= 0.75;
-
+      
       mantenimiento *= factorMod;
       const deficit = peso * deficitPct;
       const total24h = mantenimiento + deficit;
       const mantenimientoHora = mantenimiento / 24;
-
+      
+      // Requerimientos
       const calorias = mantenimiento;
       const glucosa = calorias * 0.05;
       const sodio = calorias * 0.03;
       const potasio = calorias * 0.02;
-
-      const porcM = (mantenimiento / total24h) * 100;
-      const porcD = (deficit / total24h) * 100;
-
-      let solucion = "DAD 5% + NaCl 0.45% + KCl 20 mEq/L";
-      if (deficitPct >= 75) solucion = "Iniciar con SF 0.9% en bolos (20 ml/kg), luego DAD 5% + NaCl 0.45% + KCl";
-
+      
+      // Fórmula estándar
       const volumenSG = 500;
       const volumenNaCl = Math.round(sodio / 1.7);
       const volumenKCl = Math.round(potasio / 1.34);
-
+      
+      // Bolo si deshidratación severa
       const bolo = peso * 20;
-      const textoIndicacion = `Indicación EV 24h:
-- Mantenimiento: ${mantenimiento.toFixed(0)} ml (${porcM.toFixed(1)}%)
-- Déficit: ${deficit.toFixed(0)} ml (${porcD.toFixed(1)}%)
-- Total: ${total24h.toFixed(0)} ml
-- Volumen horario: ${mantenimientoHora.toFixed(0)} ml/h
-
-Fórmula:
-SG 5% ${volumenSG}cc + NaCl 10% ${volumenNaCl}cc + KCl 10% ${volumenKCl}cc
-(Equivale a: Na ~35 mEq/L, K ~10 mEq/L)
-
-Requerimientos:
-- Calorías: ${calorias.toFixed(0)} kcal
-- Glucosa: ${glucosa.toFixed(1)} g
-- Sodio: ${sodio.toFixed(1)} mEq
-- Potasio: ${potasio.toFixed(1)} mEq
-
+      
+      // Mostrar resultados
+      document.getElementById("resultContent").innerHTML = `
+        <p><strong>Mantenimiento (24h):</strong> ${mantenimiento.toFixed(0)} ml</p>
+        <p><strong>Déficit:</strong> ${deficit.toFixed(0)} ml</p>
+        <p><strong>Total 24h:</strong> ${total24h.toFixed(0)} ml</p>
+        <p><strong>Flujo horario:</strong> ${mantenimientoHora.toFixed(1)} ml/h</p>
+        <p><strong>Requerimientos:</strong></p>
+        <ul>
+          <li>Calorías: ${calorias.toFixed(0)} kcal</li>
+          <li>Glucosa: ${glucosa.toFixed(1)} g</li>
+          <li>Sodio: ${sodio.toFixed(1)} mEq</li>
+          <li>Potasio: ${potasio.toFixed(1)} mEq</li>
+        </ul>
+      `;
+      
+      // Configurar fórmula editable
+      document.getElementById("volumenNaCl").value = volumenNaCl;
+      document.getElementById("volumenKCl").value = volumenKCl;
+      actualizarFormula();
+      
+      // Configurar eventos para campos editables
+      document.getElementById("volumenSG").addEventListener("input", actualizarFormula);
+      document.getElementById("volumenNaCl").addEventListener("input", actualizarFormula);
+      document.getElementById("volumenKCl").addEventListener("input", actualizarFormula);
+      
+      // Mostrar bolos si es necesario
+      if (deficitPct >= 75) {
+        document.getElementById("boloSection").classList.remove("hidden");
+        document.getElementById("boloInfo").innerHTML = `
+          <p><strong>Bolo inicial requerido:</strong> SF 0.9% ${bolo.toFixed(0)} ml (20 ml/kg)</p>
+          <p>Administrar en 20-30 minutos. Reevaluar después de cada bolo.</p>
+          <p>Máximo 3 bolos antes de reevaluación.</p>
+        `;
+      } else {
+        document.getElementById("boloSection").classList.add("hidden");
+      }
+      
+      document.getElementById("resultado").classList.remove("hidden");
+    }
+    
+    function actualizarFormula() {
+      const volumenSG = parseFloat(document.getElementById("volumenSG").value) || 500;
+      const volumenNaCl = parseFloat(document.getElementById("volumenNaCl").value) || 0;
+      const volumenKCl = parseFloat(document.getElementById("volumenKCl").value) || 0;
+      
+      const totalVolumen = volumenSG + volumenNaCl + volumenKCl;
+      const concentracionNa = volumenNaCl > 0 ? Math.round((volumenNaCl * 1.7) / totalVolumen * 1000) : 0;
+      const concentracionK = volumenKCl > 0 ? Math.round((volumenKCl * 1.34) / totalVolumen * 1000) : 0;
+      
+      document.getElementById("formulaResult").innerHTML = `
+        <p><strong>Fórmula:</strong> SG 5% ${volumenSG}ml + NaCl 10% ${volumenNaCl}ml + KCl 10% ${volumenKCl}ml</p>
+        <p>Total volumen: ${totalVolumen}ml</p>
+        ${concentracionNa > 0 ? `<p>Na+: ~${concentracionNa} mEq/L</p>` : ''}
+        ${concentracionK > 0 ? `<p>K+: ~${concentracionK} mEq/L</p>` : ''}
+      `;
+      
+      document.getElementById("glucosaInfo").innerHTML = `
+        <p>Contenido de glucosa: ${(volumenSG * 0.05).toFixed(1)}g (${((volumenSG * 0.05)/totalVolumen*100).toFixed(1)}%)</p>
+      `;
 ${deficitPct >= 75 ? `Bolo inicial: SF 0.9% ${bolo.toFixed(0)} ml (20 cc/kg)` : ""}`;
 
       textoCopia = textoIndicacion.trim();
