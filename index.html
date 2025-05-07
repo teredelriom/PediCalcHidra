@@ -568,71 +568,66 @@
 
     // Function to copy indications
     function copiarIndicaciones() {
-      const mantenimiento = document.getElementById("mantenimientoBase").textContent;
-      const requerimientos = document.getElementById("hollidayOriginal").querySelectorAll("ul li");
-      const formulaResult = document.getElementById("formulaResult").textContent;
-      const glucosaInfo = document.getElementById("glucosaInfo").textContent;
-      const boloInfo = document.getElementById("boloInfo")?.textContent || "";
-      const alertas = document.getElementById("alertasContent")?.textContent || "";
-      const recomendaciones = document.getElementById("recomendacionesContent")?.textContent || "";
-      
-      let requerimientosText = "";
-      requerimientos.forEach(item => {
-        requerimientosText += `• ${item.textContent}\n`;
-      });
-      
-      const peso = parseFloat(document.getElementById("peso").value) / 1000;
-      const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
-      const deficit = peso * deficitPct;
-      const mantenimiento24h = parseFloat(document.getElementById("requerimientoLiquidos").textContent);
-      const total24h = mantenimiento24h + deficit;
-      const flujoHorario = mantenimiento24h / 24;
-      
-      const volumenSG = document.getElementById("volumenSG").value;
-      const volumenNaCl = document.getElementById("volumenNaCl").value;
-      const volumenKCl = document.getElementById("volumenKCl").value;
-      const porcentajeSG = getSelectedSolutionPercentage();
-      
-      const formulaFinal = `Fórmula final: ${volumenSG}ml SG${porcentajeSG}% + ${volumenNaCl}ml NaCl10% + ${volumenKCl}ml KCl10%`;
-      
-      const textoACopiar = `
-        INDICACIONES DE HIDRATACIÓN
-        --------------------------
-        • Mantenimiento base: ${mantenimiento}
-        
-        REQUERIMIENTOS DIARIOS
-        ${requerimientosText}
-        
-        RESULTADOS
-        • Mantenimiento (24h): ${mantenimiento24h.toFixed(0)} ml
-        • Déficit: ${deficit.toFixed(0)} ml
-        • Total 24h: ${total24h.toFixed(0)} ml
-        • Flujo horario: ${flujoHorario.toFixed(1)} ml/h
-        
-        ${boloInfo ? `CORRECCIÓN DE DÉFICIT\n${boloInfo}\n` : ''}
-        FÓRMULA ESTÁNDAR
-        • ${formulaResult}
-        • ${glucosaInfo}
-        
-        ${alertas ? `ALERTAS\n${alertas}\n` : ''}
-        ${recomendaciones ? `RECOMENDACIONES\n${recomendaciones}\n` : ''}
-        ${formulaFinal}
-      `;
-      
-      navigator.clipboard.writeText(textoACopiar)
-        .then(() => {
-          const btnCopiar = document.getElementById("btnCopiar");
-          btnCopiar.textContent = "¡Copiado!";
-          setTimeout(() => {
-            btnCopiar.textContent = "Copiar Indicaciones";
-          }, 2000);
-        })
-        .catch(err => {
-          console.error("Error al copiar: ", err);
-          alert("No se pudo copiar. Intenta manualmente.");
-        });
+    // Obtener datos básicos
+    const peso = parseFloat(document.getElementById("peso").value) / 1000;
+    const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
+    const deficit = peso * deficitPct;
+    const mantenimiento24h = parseFloat(document.getElementById("requerimientoLiquidos").textContent);
+    const total24h = mantenimiento24h + deficit;
+    const flujoHorario = (mantenimiento24h / 24).toFixed(1);
+    
+    // Obtener requerimientos de electrolitos
+    const sodioReq = parseFloat(document.getElementById("requerimientoSodio").textContent);
+    const potasioReq = parseFloat(document.getElementById("requerimientoPotasio").textContent);
+    const cloroReq = (sodioReq + potasioReq).toFixed(1);
+    
+    // Variables para bolo
+    let bolo = 0;
+    let textoBolo = '';
+    let volumenFormulaBase = total24h;
+    
+    // Calcular bolo si está indicado
+    if (deficitPct >= 75) {
+        bolo = peso * 20;
+        textoBolo = `\n\nBOLO INICIAL (corrección de déficit):\nSF 0.9%: ${Math.round(bolo)} ml (20 ml/kg)`;
+        volumenFormulaBase = total24h - bolo;
     }
-
+    
+    // Fórmula base (valores exactos)
+    const volumenSG = parseFloat(document.getElementById("volumenSG").value) || 0;
+    const volumenNaCl = parseFloat(document.getElementById("volumenNaCl").value) || 0;
+    const volumenKCl = parseFloat(document.getElementById("volumenKCl").value) || 0;
+    
+    // Ajustar proporciones
+    const factorAjuste = volumenFormulaBase / (volumenSG + volumenNaCl + volumenKCl);
+    const volumenSGAjustado = volumenSG * factorAjuste;
+    const volumenNaClAjustado = volumenNaCl * factorAjuste;
+    const volumenKClAjustado = volumenKCl * factorAjuste;
+    
+    const porcentajeSG = getSelectedSolutionPercentage();
+    
+    // Fórmula adaptada a 1000ml (redondeando a múltiplos de 5)
+    const scalingFactor = 1000 / volumenFormulaBase;
+    let volumenSGAdaptado = roundTo5(volumenSGAjustado * scalingFactor);
+    let volumenNaClAdaptado = roundTo5(volumenNaClAjustado * scalingFactor);
+    let volumenKClAdaptado = roundTo5(volumenKClAjustado * scalingFactor);
+    
+    // Ajustar diferencia
+    const diferencia = 1000 - (volumenSGAdaptado + volumenNaClAdaptado + volumenKClAdaptado);
+    if (diferencia !== 0) volumenSGAdaptado += diferencia;
+    
+    // Texto para copiar
+    let textoACopiar = `INDICACIONES DE HIDRATACIÓN\n` +
+                     `==========================\n` +
+                     `REQUERIMIENTOS DIARIOS:\n` +
+                     `• Volumen base: ${Math.round(mantenimiento24h)} ml\n` +
+                     `• Déficit: ${Math.round(deficit)} ml\n` +
+                     `• Electrolitos:\n` +
+                     `  - Na⁺: ${sodioReq} mEq\n` +
+                     `  - K⁺: ${potasioReq} mEq\n` +
+                     `  - Cl⁻: ${cloroReq} mEq\n` +
+                     `• TOTAL REQUERIDO: ${Math.round(total24h)} ml\n\n` +
+                     `F
     // Function to export as image
     function exportarImagen() {
       const resultado = document.getElementById("resultado");
