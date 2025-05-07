@@ -407,22 +407,14 @@
       `;
     }
 
-    // Function to copy indications (updated to include bolus only when needed)
+    // Function to copy indications
     function copiarIndicaciones() {
       const mantenimiento = document.getElementById("resultContent").innerText;
-      const holliday = document.getElementById("hollidayOriginal").innerText;
       const formula = document.getElementById("formulaResult").innerText;
-      const glucosa = document.getElementById("glucosaInfo").innerText;
+      const boloInfo = document.getElementById("boloInfo")?.innerText || "";
+      const holliday = document.getElementById("hollidayOriginal").innerText;
       
-      // Obtener información de bolo solo si está visible
-      let boloInfo = "";
-      const boloSection = document.getElementById("boloSection");
-      if (!boloSection.classList.contains("hidden")) {
-        boloInfo = document.getElementById("boloInfo").innerText;
-      }
-      
-      // Crear texto formateado
-      let textoACopiar = `
+      const textoACopiar = `
         INDICACIONES DE HIDRATACIÓN
         --------------------------
         ${mantenimiento}
@@ -432,26 +424,14 @@
         
         FÓRMULA ESTÁNDAR
         ${formula}
-        ${glucosa}
-      `;
-      
-      // Agregar bolo solo si está indicado
-      if (boloInfo) {
-        textoACopiar += `
         
-        CORRECCIÓN DE DÉFICIT
         ${boloInfo}
-        `;
-      }
-      
-      textoACopiar += `
         
         Fórmula final: ${document.getElementById("volumenSG").value}ml SG5% + 
         ${document.getElementById("volumenNaCl").value}ml NaCl10% + 
         ${document.getElementById("volumenKCl").value}ml KCl10%
       `;
       
-      // Copiar al portapapeles
       navigator.clipboard.writeText(textoACopiar)
         .then(() => {
           const btnCopiar = document.getElementById("btnCopiar");
