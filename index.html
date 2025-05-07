@@ -254,7 +254,6 @@
       <div class="formula-section">
         <h3>Fórmula Holliday-Segar Original</h3>
         <div id="hollidayOriginal">
-          <p><strong>Mantenimiento base:</strong> <span id="mantenimientoBase"></span></p>
           <p><strong>Requerimientos diarios:</strong></p>
           <ul>
             <li>Líquidos: <span id="requerimientoLiquidos"></span> ml</li>
@@ -570,16 +569,7 @@
       `;
       
       // Show original Holliday-Segar formula
-      let mantenimientoBase = "";
-      if (peso <= 10) {
-        mantenimientoBase = `${peso.toFixed(2)} kg × 100 ml/kg/día = ${(peso*100).toFixed(0)} ml/día`;
-      } else if (peso <= 20) {
-        mantenimientoBase = `Primeros 10kg: 1000 ml + ${(peso-10).toFixed(2)} kg × 50 ml/kg/día = ${mantenimiento.toFixed(0)} ml/día`;
-      } else {
-        mantenimientoBase = `Primeros 10kg: 1000 ml + Siguientes 10kg: 500 ml + ${(peso-20).toFixed(2)} kg × 20 ml/kg/día = ${mantenimiento.toFixed(0)} ml/día`;
-      }
-
-      document.getElementById("mantenimientoBase").textContent = mantenimientoBase;
+     
       document.getElementById("requerimientoLiquidos").textContent = mantenimiento.toFixed(0);
       document.getElementById("requerimientoCalorias").textContent = calorias.toFixed(0);
       document.getElementById("requerimientoSodio").textContent = sodio.toFixed(1);
