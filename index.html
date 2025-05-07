@@ -568,7 +568,7 @@
 
     // Function to copy indications
     function copiarIndicaciones() {
-    // Obtener datos básicos
+    // 1. OBTENER DATOS BÁSICOS
     const peso = parseFloat(document.getElementById("peso").value) / 1000;
     const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
     const deficit = peso * deficitPct;
@@ -576,58 +576,107 @@
     const total24h = mantenimiento24h + deficit;
     const flujoHorario = (mantenimiento24h / 24).toFixed(1);
     
-    // Obtener requerimientos de electrolitos
+    // 2. OBTENER ELECTROLITOS
     const sodioReq = parseFloat(document.getElementById("requerimientoSodio").textContent);
     const potasioReq = parseFloat(document.getElementById("requerimientoPotasio").textContent);
     const cloroReq = (sodioReq + potasioReq).toFixed(1);
     
-    // Variables para bolo
+    // 3. CALCULAR BOLO (si aplica)
     let bolo = 0;
     let textoBolo = '';
     let volumenFormulaBase = total24h;
     
-    // Calcular bolo si está indicado
     if (deficitPct >= 75) {
         bolo = peso * 20;
-        textoBolo = `\n\nBOLO INICIAL (corrección de déficit):\nSF 0.9%: ${Math.round(bolo)} ml (20 ml/kg)`;
+        textoBolo = `\n\n==== BOLO INICIAL ====\n` +
+                   `• SF 0.9%: ${Math.round(bolo)} ml (20 ml/kg)\n` +
+                   `• Administrar en 20-30 min`;
         volumenFormulaBase = total24h - bolo;
     }
     
-    // Fórmula base (valores exactos)
+    // 4. CÁLCULO DE FÓRMULAS
+    const porcentajeSG = getSelectedSolutionPercentage();
     const volumenSG = parseFloat(document.getElementById("volumenSG").value) || 0;
     const volumenNaCl = parseFloat(document.getElementById("volumenNaCl").value) || 0;
     const volumenKCl = parseFloat(document.getElementById("volumenKCl").value) || 0;
     
-    // Ajustar proporciones
+    // Fórmula base (exacta)
     const factorAjuste = volumenFormulaBase / (volumenSG + volumenNaCl + volumenKCl);
     const volumenSGAjustado = volumenSG * factorAjuste;
     const volumenNaClAjustado = volumenNaCl * factorAjuste;
     const volumenKClAjustado = volumenKCl * factorAjuste;
     
-    const porcentajeSG = getSelectedSolutionPercentage();
-    
-    // Fórmula adaptada a 1000ml (redondeando a múltiplos de 5)
+    // Fórmula adaptada (redondeada a múltiplos de 5)
     const scalingFactor = 1000 / volumenFormulaBase;
-    let volumenSGAdaptado = roundTo5(volumenSGAjustado * scalingFactor);
-    let volumenNaClAdaptado = roundTo5(volumenNaClAjustado * scalingFactor);
-    let volumenKClAdaptado = roundTo5(volumenKClAjustado * scalingFactor);
+    let [sgAdaptado, naclAdaptado, kclAdaptado] = [
+        roundTo5(volumenSGAjustado * scalingFactor),
+        roundTo5(volumenNaClAjustado * scalingFactor),
+        roundTo5(volumenKClAjustado * scalingFactor)
+    ];
     
-    // Ajustar diferencia
-    const diferencia = 1000 - (volumenSGAdaptado + volumenNaClAdaptado + volumenKClAdaptado);
-    if (diferencia !== 0) volumenSGAdaptado += diferencia;
+    // Ajuste para totalizar 1000ml
+    const diferencia = 1000 - (sgAdaptado + naclAdaptado + kclAdaptado);
+    if (diferencia !== 0) sgAdaptado += diferencia;
     
-    // Texto para copiar
-    let textoACopiar = `INDICACIONES DE HIDRATACIÓN\n` +
-                     `==========================\n` +
-                     `REQUERIMIENTOS DIARIOS:\n` +
-                     `• Volumen base: ${Math.round(mantenimiento24h)} ml\n` +
-                     `• Déficit: ${Math.round(deficit)} ml\n` +
-                     `• Electrolitos:\n` +
-                     `  - Na⁺: ${sodioReq} mEq\n` +
-                     `  - K⁺: ${potasioReq} mEq\n` +
-                     `  - Cl⁻: ${cloroReq} mEq\n` +
-                     `• TOTAL REQUERIDO: ${Math.round(total24h)} ml\n\n` +
-                     `F
+    // 5. CONSTRUIR TEXTO ORGANIZADO
+    let textoACopiar = `=== HIDRATACIÓN PARENTERAL ===\n\n` +
+                     `==== DATOS DEL PACIENTE ====\n` +
+                     `• Peso: ${peso.toFixed(2)} kg\n` +
+                     `• Déficit: ${Math.round(deficit)} ml (${deficitPct}%)\n\n` +
+                     
+                     `==== REQUERIMIENTOS ====\n` +
+                     `• Mantenimiento: ${Math.round(mantenimiento24h)} ml/24h\n` +
+                     `• Total 24h: ${Math.round(total24h)} ml\n` +
+                     `• Flujo: ${flujoHorario} ml/h\n\n` +
+                     
+                     `==== ELECTROLITOS ====\n` +
+                     `• Na⁺: ${sodioReq} mEq\n` +
+                     `• K⁺: ${potasioReq} mEq\n` +
+                     `• Cl⁻: ${cloroReq} mEq\n\n` +
+                     
+                     `==== FÓRMULA BASE ====\n` +
+                     `• SG ${porcentajeSG}%: ${volumenSGAjustado.toFixed(1)} ml\n` +
+                     `• NaCl 10%: ${volumenNaClAjustado.toFixed(1)} ml\n` +
+                     `• KCl 10%: ${volumenKClAjustado.toFixed(1)} ml\n` +
+                     `• Total: ${Math.round(volumenFormulaBase)} ml\n\n` +
+                     
+                     `==== FÓRMULA ESTÁNDAR (1000ml) ====\n` +
+                     `• SG ${porcentajeSG}%: ${sgAdaptado} ml\n` +
+                     `• NaCl 10%: ${naclAdaptado} ml\n` +
+                     `• KCl 10%: ${kclAdaptado} ml\n\n` +
+                     
+                     `==== CONCENTRACIONES FINALES ====\n` +
+                     `• Na⁺: ${(naclAdaptado * 1.7).toFixed(1)} mEq/L\n` +
+                     `• K⁺: ${(kclAdaptado * 1.34).toFixed(1)} mEq/L\n` +
+                     `• Glucosa: ${(sgAdaptado * porcentajeSG / 1000 * 100).toFixed(1)} g%\n` +
+                     
+                     textoBolo +
+                     
+                     `\n\n==== VERIFICACIÓN ====\n` +
+                     `• Bolo: ${Math.round(bolo)} ml\n` +
+                     `• Fórmula: ${Math.round(volumenFormulaBase)} ml\n` +
+                     `• Total administrado: ${Math.round(bolo + volumenFormulaBase)} ml\n` +
+                     `• Diferencia: ${Math.abs(Math.round(total24h - (bolo + volumenFormulaBase))} ml`;
+
+    // 6. COPIAR AL PORTAPAPELES
+    navigator.clipboard.writeText(textoACopiar)
+        .then(() => {
+            const btnCopiar = document.getElementById("btnCopiar");
+            btnCopiar.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+            setTimeout(() => {
+                btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar Indicaciones';
+            }, 2000);
+        })
+        .catch(err => {
+            console.error("Error al copiar: ", err);
+            alert("No se pudo copiar. Intenta manualmente.");
+        });
+}
+
+// Función auxiliar para redondeo
+function roundTo5(value) {
+    return Math.round(value / 5) * 5;
+}
     // Function to export as image
     function exportarImagen() {
       const resultado = document.getElementById("resultado");
