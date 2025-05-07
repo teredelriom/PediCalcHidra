@@ -224,40 +224,38 @@
     
     <div id="resultado" class="result-section hidden">
       <h2>Resultados</h2>
-      <div id="resultContent"></div>
-      
-      <div class="formula-section hidden" id="formulaContainer">
-        <h3>Fórmula Estándar</h3>
-        <p>SG 5% + NaCl 10% + KCl 10%</p>
-        
+      <div id="resultContent">
+    <div>    
+      </div>
+        <div class="formula-section hidden" id="formulaContainer">
+          <h3>Fórmula Estándar</h3>
+          <p>SG 5% + NaCl 10% + KCl 10%</p>
+        <div>  
         <div class="editable-formula">
-          <div>
-            <label for="volumenSG">SG 5% (ml)</label>
-            <input type="number" id="volumenSG" value="500" min="100" step="50">
-          </div>
-          <div>
-            <label for="volumenNaCl">NaCl 10% (ml)</label>
-            <input type="number" id="volumenNaCl" min="0" step="1">
-          </div>
-          <div>
-            <label for="volumenKCl">KCl 10% (ml)</label>
-            <input type="number" id="volumenKCl" min="0" step="1">
-          </div>
+              <label for="volumenSG">SG 5% (ml)</label>
+              <input type="number" id="volumenSG" value="500" min="100" step="50">
+            </div>
+              <label for="volumenNaCl">NaCl 10% (ml)</label>
+              <input type="number" id="volumenNaCl" min="0" step="1">
+            </div>
+            <div>
+              <label for="volumenKCl">KCl 10% (ml)</label>
+              <input type="number" id="volumenKCl" min="0" step="1">
+            </div>
+        </div>
+          <p id="formulaResult"></p>
+          <p id="glucosaInfo"></p>
         </div>
         
-        <p id="formulaResult"></p>
-        <p id="glucosaInfo"></p>
+        <div id="boloSection" class="bolo-section hidden">
+          <h3>Corrección de Déficit</h3>
+          <p id="boloInfo"></p>
+        </div>
+        
+        <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">Copiar Indicaciones</button>
+        <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
       </div>
-      
-      <div id="boloSection" class="bolo-section hidden">
-        <h3>Corrección de Déficit</h3>
-        <p id="boloInfo"></p>
-      </div>
-      
-      <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">Copiar Indicaciones</button>
-      <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
     </div>
-  </div>
 
   <div id="offlineStatus" class="offline-status">
     Estás trabajando sin conexión. Los cambios se sincronizarán cuando vuelvas a estar en línea.
