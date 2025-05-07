@@ -152,6 +152,31 @@
     #btnCopiar:hover {
       background-color: #2a9a8e;
     }
+    #hollidayOriginal {
+      background: #f0f7ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border-left: 4px solid #3b82f6;
+    }
+    #hollidayOriginal ul {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+    #hollidayOriginal li {
+      margin-bottom: 5px;
+    }
+    .acciones-resultados {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    @media (max-width: 640px) {
+      .acciones-resultados {
+        grid-template-columns: 1fr;
+      }
+    }
     @media print {
       body * {
         visibility: hidden;
@@ -226,6 +251,22 @@
       <h2>Resultados</h2>
       <div id="resultContent"></div>
       
+      <div class="formula-section">
+        <h3>Fórmula Holliday-Segar Original</h3>
+        <div id="hollidayOriginal">
+          <p><strong>Mantenimiento base:</strong> <span id="mantenimientoBase"></span></p>
+          <p><strong>Requerimientos diarios:</strong></p>
+          <ul>
+            <li>Líquidos: <span id="requerimientoLiquidos"></span> ml</li>
+            <li>Calorías: <span id="requerimientoCalorias"></span> kcal</li>
+            <li>Sodio: <span id="requerimientoSodio"></span> mEq (≈ <span id="sodioMg"></span> mg NaCl)</li>
+            <li>Potasio: <span id="requerimientoPotasio"></span> mEq (≈ <span id="potasioMg"></span> mg KCl)</li>
+            <li>Glucosa: <span id="requerimientoGlucosa"></span> g</li>
+          </ul>
+          <p class="info-text">* Basado en: Primeros 10kg: 100ml/kg/día, Siguientes 10kg: 50ml/kg/día, Resto: 20ml/kg/día</p>
+        </div>
+      </div>
+      
       <div class="formula-section hidden" id="formulaContainer">
         <h3>Fórmula Estándar</h3>
         <p>SG 5% + NaCl 10% + KCl 10%</p>
@@ -254,8 +295,20 @@
         <p id="boloInfo"></p>
       </div>
       
-      <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">Copiar Indicaciones</button>
-      <button class="btn" onclick="exportarImagen()">Exportar como Imagen</button>
+      <div class="acciones-resultados">
+        <button id="btnCopiar" class="btn" onclick="copiarIndicaciones()">
+          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+          </svg>
+          Copiar Indicaciones
+        </button>
+        <button class="btn" onclick="exportarImagen()">
+          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          Exportar como Imagen
+        </button>
+      </div>
     </div>
   </div>
 
@@ -359,12 +412,17 @@
       const mantenimiento = document.getElementById("resultContent").innerText;
       const formula = document.getElementById("formulaResult").innerText;
       const boloInfo = document.getElementById("boloInfo")?.innerText || "";
+      const holliday = document.getElementById("hollidayOriginal").innerText;
       
       const textoACopiar = `
         INDICACIONES DE HIDRATACIÓN
         --------------------------
         ${mantenimiento}
         
+        FÓRMULA HOLLIDAY-SEGAR
+        ${holliday}
+        
+        FÓRMULA ESTÁNDAR
         ${formula}
         
         ${boloInfo}
@@ -442,11 +500,13 @@
       const tempF = parseFloat(document.getElementById("tempF")?.value) || 37.5;
       const tempA = parseFloat(document.getElementById("tempA")?.value) || 31;
       
+      // Maintenance calculation (Holliday-Segar)
       let mantenimiento = 0;
       if (peso <= 10) mantenimiento = peso * 100;
       else if (peso <= 20) mantenimiento = 1000 + (peso - 10) * 50;
       else mantenimiento = 1500 + (peso - 20) * 20;
       
+      // Adjustments
       let factorMod = 1.0;
       if (condiciones.includes("fiebre") && tempF > 37.5) {
         factorMod += 0.12 * (tempF - 37.5);
@@ -455,6 +515,7 @@
         mantenimiento += Math.floor(mantenimiento / 100) * (tempA - 31) * 30;
       }
       
+      // Reducing conditions
       if (condiciones.includes("vm")) mantenimiento *= 0.8;
       if (condiciones.includes("hipernatremia")) mantenimiento *= 0.75;
       if (condiciones.includes("edema")) mantenimiento *= 0.75;
@@ -466,17 +527,21 @@
       const total24h = mantenimiento + deficit;
       const mantenimientoHora = mantenimiento / 24;
       
+      // Requirements
       const calorias = mantenimiento;
       const glucosa = calorias * 0.05;
       const sodio = calorias * 0.03;
       const potasio = calorias * 0.025;
       
+      // Standard formula
       const volumenSG = 500;
       const volumenNaCl = Math.round(sodio / 1.7);
       const volumenKCl = Math.round(potasio / 1.34);
       
+      // Bolus if severe dehydration
       const bolo = peso * 20;
       
+      // Display results
       document.getElementById("resultContent").innerHTML = `
         <p><strong>Mantenimiento (24h):</strong> ${mantenimiento.toFixed(0)} ml</p>
         <p><strong>Déficit:</strong> ${deficit.toFixed(0)} ml</p>
@@ -484,11 +549,32 @@
         <p><strong>Flujo horario:</strong> ${mantenimientoHora.toFixed(1)} ml/h</p>
       `;
       
+      // Show original Holliday-Segar formula
+      let mantenimientoBase = "";
+      if (peso <= 10) {
+        mantenimientoBase = `${peso.toFixed(2)} kg × 100 ml/kg/día = ${(peso*100).toFixed(0)} ml/día`;
+      } else if (peso <= 20) {
+        mantenimientoBase = `Primeros 10kg: 1000 ml + ${(peso-10).toFixed(2)} kg × 50 ml/kg/día = ${mantenimiento.toFixed(0)} ml/día`;
+      } else {
+        mantenimientoBase = `Primeros 10kg: 1000 ml + Siguientes 10kg: 500 ml + ${(peso-20).toFixed(2)} kg × 20 ml/kg/día = ${mantenimiento.toFixed(0)} ml/día`;
+      }
+
+      document.getElementById("mantenimientoBase").textContent = mantenimientoBase;
+      document.getElementById("requerimientoLiquidos").textContent = mantenimiento.toFixed(0);
+      document.getElementById("requerimientoCalorias").textContent = calorias.toFixed(0);
+      document.getElementById("requerimientoSodio").textContent = sodio.toFixed(1);
+      document.getElementById("sodioMg").textContent = (sodio * 58.44).toFixed(0);
+      document.getElementById("requerimientoPotasio").textContent = potasio.toFixed(1);
+      document.getElementById("potasioMg").textContent = (potasio * 74.55).toFixed(0);
+      document.getElementById("requerimientoGlucosa").textContent = glucosa.toFixed(1);
+      
+      // Configure editable formula
       document.getElementById("volumenSG").value = volumenSG;
       document.getElementById("volumenNaCl").value = volumenNaCl;
       document.getElementById("volumenKCl").value = volumenKCl;
       actualizarFormula();
       
+      // Show bolus if needed
       if (deficitPct >= 75) {
         document.getElementById("boloSection").classList.remove("hidden");
         document.getElementById("boloInfo").innerHTML = `
@@ -500,6 +586,7 @@
         document.getElementById("boloSection").classList.add("hidden");
       }
       
+      // Store results
       try {
         localStorage.setItem("resultado", JSON.stringify({
           mantenimiento: mantenimiento.toFixed(0),
