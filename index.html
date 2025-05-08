@@ -3,9 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3FB8AF"/>
+  <meta name="description" content="Calculadora de Hidratación Pediátrica - Herramienta para cálculo de fluidos en pacientes pediátricos">
   <title>Calculadora de Hidratación Pediátrica</title>
+  <link rel="manifest" href="manifest.json" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@heroicons/react/solid/esm/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --color-primary: #3FB8AF;
@@ -16,12 +24,18 @@
       --color-danger: #FF3D7F;
       --color-success: #7FC7AF;
       --color-warning: #FF9E9D;
+      --color-light: #f8f9fa;
+      --color-dark: #212529;
+      --color-gray: #6c757d;
+      --color-gray-light: #e9ecef;
     }
     
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       min-height: 100vh;
+      line-height: 1.6;
+      color: var(--color-dark);
     }
     
     .solution-card {
@@ -98,144 +112,545 @@
     .fade-in {
       animation: fadeIn 0.5s ease-out forwards;
     }
+    
+    /* Additional styles from the second file */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    h1, h2, h3, h4 {
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 15px;
+    }
+    
+    h1:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--color-primary);
+      border-radius: 2px;
+    }
+    
+    .result-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-top: 4px solid var(--color-primary);
+    }
+    
+    .result-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .result-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      margin-bottom: 5px;
+    }
+    
+    .result-unit {
+      font-size: 14px;
+      color: var(--color-gray);
+      font-weight: 500;
+    }
+    
+    .formula-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-top: 4px solid var(--color-secondary);
+    }
+    
+    .formula-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .input-with-unit {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    
+    .input-with-unit input {
+      flex: 1;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      padding-right: 50px;
+    }
+    
+    .unit {
+      padding: 0 15px;
+      background: var(--color-gray-light);
+      border: 2px solid var(--color-gray-light);
+      border-left: none;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray);
+    }
+    
+    .solution-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .solution-selector label {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      border: 2px solid var(--color-gray-light);
+      border-radius: 10px;
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 0;
+      font-weight: 400;
+    }
+    
+    .solution-selector label:hover {
+      border-color: var(--color-primary-light);
+      background-color: rgba(58, 134, 255, 0.05);
+    }
+    
+    .solution-selector input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      accent-color: var(--color-primary);
+    }
+    
+    .solution-selected {
+      background-color: rgba(58, 134, 255, 0.1) !important;
+      border-color: var(--color-primary) !important;
+    }
+    
+    .info-text {
+      font-size: 13px;
+      color: var(--color-gray);
+      margin-top: 8px;
+      font-weight: 400;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .offline-status {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--color-danger);
+      color: white;
+      padding: 12px;
+      text-align: center;
+      display: none;
+      font-weight: 500;
+      z-index: 1000;
+    }
+    
+    .install-container {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    
+    .btn-install {
+      background-color: var(--color-secondary);
+    }
+    
+    .btn-install:hover {
+      background-color: #6a2bc0;
+      box-shadow: 0 5px 15px rgba(131, 56, 236, 0.3);
+    }
+    
+    .result-section {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+      
+      .solution-selector {
+        grid-template-columns: 1fr;
+      }
+      
+      .result-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+    }
   </style>
 </head>
 <body class="p-4 md:p-8">
-  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden fade-in">
-    <div class="p-6 md:p-8">
-      <h1 class="text-2xl md:text-3xl font-bold text-center text-[#3FB8AF] mb-6">
-        <i class="fas fa-calculator mr-2"></i>Calculadora de Hidratación Pediátrica
-      </h1>
-      
-      <!-- Formulario de entrada -->
-      <div class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Peso (gramos)</label>
-            <div class="relative">
-              <input type="number" id="peso" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 8500" required>
-              <span class="absolute right-3 top-3 text-gray-500">g</span>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p>
+  <div class="container fade-in">
+    <div id="installContainer" class="install-container hidden">
+      <button id="installBtn" class="btn-tertiary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center mx-auto">
+        <i class="fas fa-download mr-2"></i> Instalar Aplicación
+      </button>
+    </div>
+    
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-[#3FB8AF] mb-6">
+      <i class="fas fa-calculator mr-2"></i>Calculadora de Hidratación Pediátrica
+    </h1>
+    
+    <!-- Formulario de entrada -->
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Peso</label>
+          <div class="input-with-unit">
+            <input type="number" id="peso" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 8500" required>
+            <span class="unit">g</span>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Edad (años)</label>
+          <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Edad</label>
+          <div class="input-with-unit">
             <input type="number" id="edad" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 2" step="0.1" min="0">
+            <span class="unit">años</span>
           </div>
         </div>
-
-        <div>
-          <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Grado de deshidratación</label>
-          <select id="deshidratacion" class="w-full input-highlight p-3 border border-gray-300 rounded-lg">
-            <option value="0">Sin deshidratación</option>
-            <option value="50">Leve (3-5%)</option>
-            <option value="75">Moderada (6-9%)</option>
-            <option value="100">Severa (>10%)</option>
-          </select>
-        </div>
-
-        <!-- Sección de condiciones clínicas -->
-        <div>
-          <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Condiciones clínicas</label>
-          <div id="checkboxes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            <!-- Checkboxes generados dinámicamente -->
-          </div>
-        </div>
-
-        <!-- Botón de cálculo -->
-        <button id="btnCalcular" onclick="calcular()" 
-          class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400">
-          <i class="fas fa-calculator mr-2"></i> Calcular Hidratación
-        </button>
       </div>
 
-      <!-- Sección de resultados -->
-      <div id="resultado" class="hidden mt-8 space-y-6 fade-in">
-        <div class="bg-[#7FC7AF]/10 rounded-lg p-6 border border-[#7FC7AF]">
-          <h2 class="text-xl font-bold text-[#3FB8AF] mb-4">
-            <i class="fas fa-chart-bar mr-2"></i>Resultados Calculados
-          </h2>
-          
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-lg shadow text-center">
-              <p class="text-sm text-[#3FB8AF]">Mantenimiento</p>
-              <p class="text-2xl font-bold text-[#FF3D7F]" id="mantenimientoResult">0</p>
-              <p class="text-xs text-gray-500">mL/24h</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow text-center">
-              <p class="text-sm text-[#3FB8AF]">Déficit</p>
-              <p class="text-2xl font-bold text-[#FF3D7F]" id="deficitResult">0</p>
-              <p class="text-xs text-gray-500">mL</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow text-center">
-              <p class="text-sm text-[#3FB8AF]">Total 24h</p>
-              <p class="text-2xl font-bold text-[#FF3D7F]" id="total24hResult">0</p>
-              <p class="text-xs text-gray-500">mL</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow text-center">
-              <p class="text-sm text-[#3FB8AF]">Flujo horario</p>
-              <p class="text-2xl font-bold text-[#FF3D7F]" id="flujoHorarioResult">0</p>
-              <p class="text-xs text-gray-500">mL/h</p>
-            </div>
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Grado de deshidratación</label>
+        <select id="deshidratacion" class="w-full input-highlight p-3 border border-gray-300 rounded-lg">
+          <option value="0">Sin deshidratación</option>
+          <option value="50">Leve (3-5%)</option>
+          <option value="75">Moderada (6-9%)</option>
+          <option value="100">Severa (>10%)</option>
+        </select>
+      </div>
+
+      <!-- Sección de condiciones clínicas -->
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Condiciones clínicas</label>
+        <div id="checkboxes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="fiebre" name="condiciones" value="fiebre" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Fiebre (>37.5°C)</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="ambienteCalido" name="condiciones" value="ambienteCalido" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Ambiente caluroso (>31°C)</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="vm" name="condiciones" value="vm" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Ventilación mecánica</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="hipernatremia" name="condiciones" value="hipernatremia" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Hipernatremia</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="hiponatremia" name="condiciones" value="hiponatremia" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Hiponatremia</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="edema" name="condiciones" value="edema" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Edema</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="oliguria" name="condiciones" value="oliguria" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Oliguria o IRA</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="postq" name="condiciones" value="postq" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Postquirúrgico / Crítico</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="desnutricion" name="condiciones" value="desnutricion" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Desnutrición</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="hipoglicemia" name="condiciones" value="hipoglicemia" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Hipoglicemia</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="tempFiebre" class="hidden">
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Temperatura corporal</label>
+        <div class="input-with-unit">
+          <input type="number" id="tempF" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 38.5" step="0.1" min="35" max="42">
+          <span class="unit">°C</span>
+        </div>
+      </div>
+      
+      <div id="tempAmbiente" class="hidden">
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Temperatura ambiental</label>
+        <div class="input-with-unit">
+          <input type="number" id="tempA" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 33" step="0.1" min="20" max="50">
+          <span class="unit">°C</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Electrolitos basales (opcional)</label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="input-with-unit">
+            <input type="number" id="naBasal" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Na" step="0.1" min="100" max="200">
+            <span class="unit">mEq/L</span>
+          </div>
+          <div class="input-with-unit">
+            <input type="number" id="kBasal" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="K" step="0.1" min="1" max="10">
+            <span class="unit">mEq/L</span>
+          </div>
+          <div class="input-with-unit">
+            <input type="number" id="clBasal" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Cl" step="0.1" min="70" max="150">
+            <span class="unit">mEq/L</span>
           </div>
         </div>
+        <p class="info-text">Ingrese valores basales para ajustar cálculo de electrolitos</p>
+      </div>
 
-        <!-- Solución recomendada -->
-        <div id="solucionRecomendadaContainer" class="bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="bg-[#3FB8AF] text-white p-4">
-            <h3 class="text-lg font-bold flex items-center">
-              <i class="fas fa-flask mr-2"></i> Solución Intravenosa Recomendada
-            </h3>
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Solución base</label>
+        <div class="solution-selector" id="solucionSelector">
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="radio" name="solucionBase" value="5" checked class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">SG 5%</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="radio" name="solucionBase" value="10" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">SG 10%</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="radio" name="solucionBase" value="50" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">SG 50%</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Botón de cálculo -->
+      <button id="btnCalcular" onclick="calcular()" 
+        class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400">
+        <i class="fas fa-calculator mr-2"></i> Calcular Hidratación
+      </button>
+    </div>
+
+    <!-- Sección de resultados -->
+    <div id="resultado" class="hidden mt-8 space-y-6 fade-in">
+      <div class="bg-[#7FC7AF]/10 rounded-lg p-6 border border-[#7FC7AF]">
+        <h2 class="text-xl font-bold text-[#3FB8AF] mb-4">
+          <i class="fas fa-chart-bar mr-2"></i>Resultados Calculados
+        </h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Mantenimiento</h3>
+            <div class="result-value" id="mantenimientoResult">0</div>
+            <div class="result-unit">mL/24h</div>
           </div>
-          <div id="solucionRecomendadaDetalle" class="p-4">
-            <!-- Contenido generado dinámicamente -->
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Déficit</h3>
+            <div class="result-value" id="deficitResult">0</div>
+            <div class="result-unit">mL</div>
+          </div>
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Total 24h</h3>
+            <div class="result-value" id="total24hResult">0</div>
+            <div class="result-unit">mL</div>
+          </div>
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Flujo horario</h3>
+            <div class="result-value" id="flujoHorarioResult">0</div>
+            <div class="result-unit">mL/h</div>
           </div>
         </div>
+      </div>
 
-        <!-- Comparación de soluciones alternativas -->
-        <div id="solucionesAlternativas" class="hidden bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="bg-[#DAD8A7] p-4">
-            <h3 class="text-lg font-bold flex items-center text-[#3FB8AF]">
-              <i class="fas fa-exchange-alt mr-2"></i> Soluciones Alternativas
-            </h3>
-          </div>
-          <div id="solucionesAlternativasDetalle" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Contenido generado dinámicamente -->
-          </div>
-        </div>
-
-        <!-- Fórmula Holliday-Segar -->
-        <div class="bg-[#DAD8A7]/10 rounded-lg p-6 border border-[#DAD8A7]">
-          <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
-            <i class="fas fa-info-circle mr-2 text-[#FF3D7F]"></i>Fórmula Holliday-Segar
+      <!-- Solución recomendada -->
+      <div id="solucionRecomendadaContainer" class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-[#3FB8AF] text-white p-4">
+          <h3 class="text-lg font-bold flex items-center">
+            <i class="fas fa-flask mr-2"></i> Solución Intravenosa Recomendada
           </h3>
-          <div id="hollidayOriginal" class="text-sm">
-            <!-- Contenido generado dinámicamente -->
-          </div>
         </div>
-
-        <!-- Notas clínicas -->
-        <div id="notasClinicas" class="hidden space-y-3">
+        <div id="solucionRecomendadaDetalle" class="p-4">
           <!-- Contenido generado dinámicamente -->
         </div>
+      </div>
 
-        <!-- Acciones -->
-        <div class="flex flex-col md:flex-row gap-4">
-          <button onclick="copiarIndicaciones()" 
-            class="flex-1 btn-tertiary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-            <i class="far fa-copy mr-2"></i> Copiar Indicaciones
-          </button>
-          <button onclick="exportarImagen()" 
-            class="flex-1 btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-            <i class="far fa-image mr-2"></i> Exportar como Imagen
-          </button>
+      <!-- Comparación de soluciones alternativas -->
+      <div id="solucionesAlternativas" class="hidden bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-[#DAD8A7] p-4">
+          <h3 class="text-lg font-bold flex items-center text-[#3FB8AF]">
+            <i class="fas fa-exchange-alt mr-2"></i> Soluciones Alternativas
+          </h3>
         </div>
+        <div id="solucionesAlternativasDetalle" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Contenido generado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Fórmula Holliday-Segar -->
+      <div class="bg-[#DAD8A7]/10 rounded-lg p-6 border border-[#DAD8A7]">
+        <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
+          <i class="fas fa-info-circle mr-2 text-[#FF3D7F]"></i>Fórmula Holliday-Segar
+        </h3>
+        <div id="hollidayOriginal" class="text-sm">
+          <!-- Contenido generado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Notas clínicas -->
+      <div id="notasClinicas" class="hidden space-y-3">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex flex-col md:flex-row gap-4">
+        <button onclick="copiarIndicaciones()" 
+          class="flex-1 btn-tertiary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+          <i class="far fa-copy mr-2"></i> Copiar Indicaciones
+        </button>
+        <button onclick="exportarImagen()" 
+          class="flex-1 btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+          <i class="far fa-image mr-2"></i> Exportar como Imagen
+        </button>
       </div>
     </div>
   </div>
 
+  <div id="offlineStatus" class="offline-status">
+    Estás trabajando sin conexión. Los cambios se sincronizarán cuando vuelvas a estar en línea.
+  </div>
+
   <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful');
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+
+    // Handle PWA installation
+    let deferredPrompt;
+    const installContainer = document.getElementById('installContainer');
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installContainer.classList.remove('hidden');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installContainer.classList.add('hidden');
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installContainer.classList.add('hidden');
+      deferredPrompt = null;
+    });
+
+    // Online/offline detection
+    function updateOnlineStatus() {
+      const offlineStatus = document.getElementById('offlineStatus');
+      if (navigator.onLine) {
+        offlineStatus.style.display = 'none';
+      } else {
+        offlineStatus.style.display = 'block';
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Function to toggle temperature input fields
+    function toggleTemperaturas() {
+      const checkboxes = document.querySelectorAll('#checkboxes input[type="checkbox"]');
+      const condiciones = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+    
+      const tempFiebre = document.getElementById("tempFiebre");
+      const tempAmbiente = document.getElementById("tempAmbiente");
+    
+      if (tempFiebre) tempFiebre.classList.toggle("hidden", !condiciones.includes("fiebre"));
+      if (tempAmbiente) tempAmbiente.classList.toggle("hidden", !condiciones.includes("ambienteCalido"));
+    }
+
+    // Function to update solution selector UI
+    function updateSolutionSelectorUI() {
+      const soluciones = document.querySelectorAll('#solucionSelector label');
+      soluciones.forEach(sol => {
+        if (sol.querySelector('input').checked) {
+          sol.classList.add('solution-selected');
+        } else {
+          sol.classList.remove('solution-selected');
+        }
+      });
+    }
+
+    // Function to get selected solution percentage
+    function getSelectedSolutionPercentage() {
+      const selected = document.querySelector('input[name="solucionBase"]:checked');
+      return selected ? parseInt(selected.value) : 5;
+    }
+
     // Datos iniciales
     const condicionesClinicas = [
       { id: "fiebre", label: "Fiebre (>37.5°C)" },
@@ -249,21 +664,6 @@
       { id: "desnutricion", label: "Desnutrición" },
       { id: "hipoglicemia", label: "Hipoglicemia" }
     ];
-
-    // Inicializar checkboxes
-    function inicializarCheckboxes() {
-      const container = document.getElementById("checkboxes");
-      condicionesClinicas.forEach(cond => {
-        const div = document.createElement("div");
-        div.className = "flex items-center";
-        div.innerHTML = `
-          <input type="checkbox" id="${cond.id}" name="condiciones" value="${cond.id}" 
-            class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
-          <label for="${cond.id}" class="ml-2 text-sm text-gray-700">${cond.label}</label>
-        `;
-        container.appendChild(div);
-      });
-    }
 
     // Función principal de cálculo
     function calcular() {
@@ -712,11 +1112,16 @@
 
     // Inicialización
     document.addEventListener("DOMContentLoaded", () => {
-      inicializarCheckboxes();
+      updateSolutionSelectorUI();
       
       // Validar peso para habilitar botón de cálculo
       document.getElementById("peso").addEventListener("input", function() {
         document.getElementById("btnCalcular").disabled = !this.value || parseFloat(this.value) < 100;
+      });
+
+      // Toggle temperature inputs when conditions change
+      document.querySelectorAll('#checkboxes input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', toggleTemperaturas);
       });
     });
   </script>
