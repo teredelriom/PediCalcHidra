@@ -259,6 +259,22 @@
       font-size: 14px;
       color: #64748b;
     }
+    .result-details {
+      margin-top: 10px;
+      font-size: 14px;
+      text-align: left;
+      padding-left: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+    .result-details p {
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .result-details span {
+      font-weight: 600;
+    }
     .electrolitos-input {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -266,6 +282,27 @@
     }
     .electrolitos-input .input-with-unit {
       margin-bottom: 0;
+    }
+    .formula-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .formula-box {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      border-left: 4px solid var(--color-secondary);
+    }
+    .formula-box h4 {
+      margin-top: 0;
+      color: var(--color-primary);
+      font-size: 15px;
+      text-align: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
     }
     @media (max-width: 640px) {
       .acciones-resultados {
@@ -281,6 +318,9 @@
         grid-template-columns: 1fr;
       }
       .electrolitos-input {
+        grid-template-columns: 1fr;
+      }
+      .formula-container {
         grid-template-columns: 1fr;
       }
     }
@@ -434,6 +474,30 @@
           <h3>Flujo horario</h3>
           <div class="result-value" id="flujoHorarioResult">0</div>
           <div class="result-unit">ml/h</div>
+        </div>
+      </div>
+      
+      <div class="formula-container">
+        <div class="formula-box">
+          <h4>Fórmula Base</h4>
+          <div class="result-value" id="formulaBaseVolumen">0</div>
+          <div class="result-unit">ml total</div>
+          <div class="result-details">
+            <p>SG <span id="formulaBaseSG">5</span>%: <span id="formulaBaseSGml">0</span> ml</p>
+            <p>NaCl 10%: <span id="formulaBaseNaClml">0</span> ml</p>
+            <p>KCl 10%: <span id="formulaBaseKClml">0</span> ml</p>
+          </div>
+        </div>
+
+        <div class="formula-box">
+          <h4>Fórmula 1000ml</h4>
+          <div class="result-value">1000</div>
+          <div class="result-unit">ml total</div>
+          <div class="result-details">
+            <p>SG <span id="formula1000SG">5</span>%: <span id="formula1000SGml">0</span> ml</p>
+            <p>NaCl 10%: <span id="formula1000NaClml">0</span> ml</p>
+            <p>KCl 10%: <span id="formula1000KClml">0</span> ml</p>
+          </div>
         </div>
       </div>
       
@@ -650,6 +714,11 @@
       }
     }
 
+    // Función auxiliar para redondeo a múltiplos de 5
+    function roundTo5(value) {
+      return Math.round(value / 5) * 5;
+    }
+
     // Function to copy indications
     function copiarIndicaciones() {
       // 1. OBTENER DATOS BÁSICOS
@@ -755,11 +824,6 @@
               console.error("Error al copiar: ", err);
               alert("No se pudo copiar. Intenta manualmente.");
           });
-    }
-
-    // Función auxiliar para redondeo
-    function roundTo5(value) {
-        return Math.round(value / 5) * 5;
     }
 
     // Function to export as image
@@ -1030,6 +1094,37 @@
       document.getElementById("volumenNaCl").value = volumenNaCl;
       document.getElementById("volumenKCl").value = volumenKCl;
       actualizarFormula();
+      
+      // Calcular fórmulas para mostrar
+      const volumenFormulaBase = total24h - (deficitPct >= 75 ? bolo : 0);
+      const factorAjuste = volumenFormulaBase / (volumenSG + volumenNaCl + volumenKCl);
+      const volumenSGAjustado = volumenSG * factorAjuste;
+      const volumenNaClAjustado = volumenNaCl * factorAjuste;
+      const volumenKClAjustado = volumenKCl * factorAjuste;
+      
+      // Fórmula adaptada a 1000ml (redondeada a múltiplos de 5)
+      const scalingFactor = 1000 / volumenFormulaBase;
+      let [sgAdaptado, naclAdaptado, kclAdaptado] = [
+          roundTo5(volumenSGAjustado * scalingFactor),
+          roundTo5(volumenNaClAjustado * scalingFactor),
+          roundTo5(volumenKClAjustado * scalingFactor)
+      ];
+      
+      // Ajuste para totalizar exactamente 1000ml
+      const diferencia = 1000 - (sgAdaptado + naclAdaptado + kclAdaptado);
+      if (diferencia !== 0) sgAdaptado += diferencia;
+      
+      // Mostrar fórmulas en los resultados
+      document.getElementById("formulaBaseVolumen").textContent = Math.round(volumenFormulaBase);
+      document.getElementById("formulaBaseSG").textContent = porcentajeSG;
+      document.getElementById("formulaBaseSGml").textContent = Math.round(volumenSGAjustado);
+      document.getElementById("formulaBaseNaClml").textContent = Math.round(volumenNaClAjustado);
+      document.getElementById("formulaBaseKClml").textContent = Math.round(volumenKClAjustado);
+
+      document.getElementById("formula1000SG").textContent = porcentajeSG;
+      document.getElementById("formula1000SGml").textContent = sgAdaptado;
+      document.getElementById("formula1000NaClml").textContent = naclAdaptado;
+      document.getElementById("formula1000KClml").textContent = kclAdaptado;
       
       // Show bolus if needed
       if (deficitPct >= 75) {
