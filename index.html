@@ -193,52 +193,15 @@
           </div>
         </div>
 
-        <!-- Fórmula Base y Adaptada -->
-        <div id="formulasContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Fórmula Base -->
-          <div class="bg-[#DAD8A7]/10 rounded-lg p-6 border border-[#DAD8A7]">
-            <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
-              <i class="fas fa-ruler mr-2"></i>Fórmula Base
+        <!-- Comparación de soluciones alternativas -->
+        <div id="solucionesAlternativas" class="hidden bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="bg-[#DAD8A7] p-4">
+            <h3 class="text-lg font-bold flex items-center text-[#3FB8AF]">
+              <i class="fas fa-exchange-alt mr-2"></i> Soluciones Alternativas
             </h3>
-            <div id="formulaBase" class="text-sm">
-              <p class="mb-2">Valores exactos sin redondeo (1 decimal para precisión)</p>
-              <ul class="space-y-2 list-disc pl-5">
-                <!-- Se llenará dinámicamente -->
-              </ul>
-            </div>
           </div>
-          
-          <!-- Fórmula Adaptada -->
-          <div class="bg-[#FF9E9D]/10 rounded-lg p-6 border border-[#FF9E9D]">
-            <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
-              <i class="fas fa-ruler-combined mr-2"></i>Fórmula Adaptada
-            </h3>
-            <div id="formulaAdaptada" class="text-sm">
-              <p class="mb-2">Redondeada a múltiplos de 5 ml y ajustada a 1000 ml</p>
-              <ul class="space-y-2 list-disc pl-5">
-                <!-- Se llenará dinámicamente -->
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bolo -->
-        <div id="boloContainer" class="hidden bg-[#FF3D7F]/10 rounded-lg p-6 border border-[#FF3D7F]">
-          <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
-            <i class="fas fa-bolt mr-2"></i>Bolo Inicial
-          </h3>
-          <div id="boloDetalle" class="text-sm">
-            <!-- Se llenará dinámicamente -->
-          </div>
-        </div>
-
-        <!-- Verificación -->
-        <div id="verificacionContainer" class="hidden bg-[#3FB8AF]/10 rounded-lg p-6 border border-[#3FB8AF]">
-          <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
-            <i class="fas fa-check-circle mr-2"></i>Verificación
-          </h3>
-          <div id="verificacionDetalle" class="text-sm">
-            <!-- Se llenará dinámicamente -->
+          <div id="solucionesAlternativasDetalle" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Contenido generado dinámicamente -->
           </div>
         </div>
 
@@ -347,9 +310,6 @@
         edad
       );
       
-      // Calcular y mostrar fórmulas base y adaptada
-      calcularYMostrarFormulas(solucionOptima, potasioReq, mantenimiento, deficit);
-      
       // Mostrar fórmula Holliday-Segar
       mostrarFormulaHollidaySegar(pesoKg, mantenimiento, sodioReq, potasioReq, glucosaReq);
       
@@ -364,117 +324,6 @@
       
       // Mostrar resultados
       document.getElementById("resultado").classList.remove("hidden");
-    }
-
-    // Función para calcular y mostrar fórmulas base y adaptada
-    function calcularYMostrarFormulas(solucionOptima, potasioReq, mantenimiento, deficit) {
-      const container = document.getElementById("formulasContainer");
-      container.classList.remove("hidden");
-      
-      // Calcular valores exactos para fórmula base
-      const volumenBase = solucionOptima.volumen;
-      const kclMlBase = (potasioReq / 1.34).toFixed(1);
-      const flujoHorarioBase = (volumenBase / 24).toFixed(1);
-      
-      // Llenar fórmula base
-      const formulaBaseList = document.getElementById("formulaBase").querySelector("ul");
-      formulaBaseList.innerHTML = `
-        <li><span class="font-medium">Volumen total:</span> ${volumenBase} mL (exacto)</li>
-        <li><span class="font-medium">SG ${solucionOptima.sgPorcentaje}%:</span> ${volumenBase} mL</li>
-        <li><span class="font-medium">NaCl:</span> ${solucionOptima.nombre.split('+')[1].trim()}</li>
-        <li><span class="font-medium">KCl 10%:</span> ${kclMlBase} mL (${potasioReq.toFixed(1)} mEq)</li>
-        <li><span class="font-medium">Flujo horario:</span> ${flujoHorarioBase} mL/h</li>
-      `;
-      
-      // Calcular valores redondeados para fórmula adaptada
-      const volumenAdaptado = Math.round(volumenBase / 5) * 5; // Redondear a múltiplos de 5
-      const kclMlAdaptado = Math.round((potasioReq / 1.34) * 2) / 2; // Redondear a 0.5 mL
-      const flujoHorarioAdaptado = (volumenAdaptado / 24).toFixed(1);
-      
-      // Llenar fórmula adaptada
-      const formulaAdaptadaList = document.getElementById("formulaAdaptada").querySelector("ul");
-      formulaAdaptadaList.innerHTML = `
-        <li><span class="font-medium">Volumen total:</span> ${volumenAdaptado} mL (redondeado a múltiplos de 5)</li>
-        <li><span class="font-medium">SG ${solucionOptima.sgPorcentaje}%:</span> ${volumenAdaptado} mL</li>
-        <li><span class="font-medium">NaCl:</span> ${solucionOptima.nombre.split('+')[1].trim()}</li>
-        <li><span class="font-medium">KCl 10%:</span> ${kclMlAdaptado.toFixed(1)} mL (${potasioReq.toFixed(1)} mEq)</li>
-        <li><span class="font-medium">Flujo horario:</span> ${flujoHorarioAdaptado} mL/h</li>
-      `;
-      
-      // Calcular y mostrar bolo si hay déficit
-      if (deficit > 0) {
-        const boloContainer = document.getElementById("boloContainer");
-        const boloDetalle = document.getElementById("boloDetalle");
-        
-        // Calcular bolo exacto (20 mL/kg)
-        const boloExacto = (peso / 1000) * 20;
-        const boloRedondeado = Math.round(boloExacto / 50) * 50; // Redondear a múltiplos de 50
-        
-        boloDetalle.innerHTML = `
-          <p class="mb-2">Para déficit de ${Math.round(deficit)} mL (${parseFloat(document.getElementById("deshidratacion").value)} mL/kg)</p>
-          <ul class="space-y-1 list-disc pl-5">
-            <li><span class="font-medium">Bolo exacto:</span> ${boloExacto.toFixed(1)} mL (20 mL/kg)</li>
-            <li><span class="font-medium">Bolo redondeado:</span> ${boloRedondeado} mL (para presentación)</li>
-            <li><span class="font-medium">Solución:</span> Solución salina normal (NaCl 0.9%)</li>
-            <li><span class="font-medium">Administrar:</span> En 20-30 minutos</li>
-          </ul>
-          <p class="mt-2 text-sm text-gray-600">Nota: El bolo se resta del volumen total de la fórmula base</p>
-        `;
-        
-        boloContainer.classList.remove("hidden");
-        
-        // Ajustar fórmula base restando el bolo
-        const volumenBaseAjustado = volumenBase - boloExacto;
-        const flujoHorarioBaseAjustado = (volumenBaseAjustado / 24).toFixed(1);
-        
-        formulaBaseList.innerHTML += `
-          <li class="text-[#FF3D7F]"><span class="font-medium">Volumen ajustado:</span> ${volumenBaseAjustado.toFixed(1)} mL (restado bolo)</li>
-          <li class="text-[#FF3D7F]"><span class="font-medium">Nuevo flujo:</span> ${flujoHorarioBaseAjustado} mL/h</li>
-        `;
-        
-        // Ajustar fórmula adaptada restando el bolo redondeado
-        const volumenAdaptadoAjustado = volumenAdaptado - boloRedondeado;
-        const flujoHorarioAdaptadoAjustado = (volumenAdaptadoAjustado / 24).toFixed(1);
-        
-        formulaAdaptadaList.innerHTML += `
-          <li class="text-[#FF3D7F]"><span class="font-medium">Volumen ajustado:</span> ${volumenAdaptadoAjustado} mL (restado bolo)</li>
-          <li class="text-[#FF3D7F]"><span class="font-medium">Nuevo flujo:</span> ${flujoHorarioAdaptadoAjustado} mL/h</li>
-        `;
-        
-        // Mostrar verificación
-        const verificacionContainer = document.getElementById("verificacionContainer");
-        const verificacionDetalle = document.getElementById("verificacionDetalle");
-        
-        const totalCalculado = mantenimiento + deficit;
-        const totalAdministrado = boloExacto + volumenBaseAjustado;
-        const diferencia = totalCalculado - totalAdministrado;
-        
-        verificacionDetalle.innerHTML = `
-          <p class="mb-2">Verificación de volúmenes:</p>
-          <ul class="space-y-1 list-disc pl-5">
-            <li><span class="font-medium">Requerimiento total:</span> ${Math.round(totalCalculado)} mL</li>
-            <li><span class="font-medium">Bolo administrado:</span> ${boloExacto.toFixed(1)} mL</li>
-            <li><span class="font-medium">Fórmula base:</span> ${volumenBaseAjustado.toFixed(1)} mL</li>
-            <li><span class="font-medium">Total administrado:</span> ${totalAdministrado.toFixed(1)} mL</li>
-            <li><span class="font-medium ${Math.abs(diferencia) > 10 ? 'text-[#FF3D7F]' : 'text-[#3FB8AF]'}">
-              Diferencia:</span> ${diferencia.toFixed(1)} mL
-            </li>
-          </ul>
-          ${Math.abs(diferencia) > 10 ? `
-            <div class="mt-2 p-2 bg-[#FF3D7F]/10 text-[#FF3D7F] text-sm rounded">
-              <i class="fas fa-exclamation-triangle mr-1"></i>
-              Diferencia significativa (>10 mL). Considerar ajustar volúmenes.
-            </div>
-          ` : `
-            <div class="mt-2 p-2 bg-[#3FB8AF]/10 text-[#3FB8AF] text-sm rounded">
-              <i class="fas fa-check-circle mr-1"></i>
-              Volúmenes dentro del rango aceptable.
-            </div>
-          `}
-        `;
-        
-        verificacionContainer.classList.remove("hidden");
-      }
     }
 
     // Función mejorada para calcular solución recomendada
@@ -526,7 +375,7 @@
         
         return {
           ...sol,
-          volumen: volumen, // Mantenemos el valor exacto sin redondear
+          volumen: Math.round(volumen),
           sodioTotal: parseFloat(sodioTotal.toFixed(1)),
           diferenciaSodio: parseFloat(diferenciaSodio.toFixed(1)),
           adecuacion: Math.abs(diferenciaSodio)
@@ -572,7 +421,7 @@
       }
       
       // Calcular KCl necesario
-      const kclMl = (potasioReq / 1.34).toFixed(1);
+      const kclMl = Math.round((potasioReq / 1.34) * 10) / 10;
       
       // Mostrar en UI
       mostrarSolucionRecomendada(mejorOpcion, kclMl, potasioReq, condiciones);
@@ -616,8 +465,8 @@
             <div>
               <p class="font-semibold text-sm text-[#3FB8AF] mb-1">Composición:</p>
               <ul class="text-sm space-y-1">
-                <li><span class="font-medium">Volumen total:</span> ${solucion.volumen.toFixed(1)} mL (exacto)</li>
-                <li><span class="font-medium">SG ${solucion.sgPorcentaje}%:</span> ${solucion.volumen.toFixed(1)} mL</li>
+                <li><span class="font-medium">Volumen total:</span> ${solucion.volumen} mL</li>
+                <li><span class="font-medium">SG ${solucion.sgPorcentaje}%:</span> ${solucion.volumen} mL</li>
                 <li><span class="font-medium">NaCl:</span> ${solucion.nombre.split('+')[1].trim()}</li>
                 <li><span class="font-medium">KCl 10%:</span> ${kclMl} mL (${potasioReq.toFixed(1)} mEq)</li>
               </ul>
@@ -637,7 +486,7 @@
           <div class="mt-4 bg-[#DAD8A7]/10 p-3 rounded border border-[#DAD8A7]">
             <p class="font-semibold text-sm text-[#3FB8AF] mb-2">Instrucciones de preparación:</p>
             <ol class="text-sm space-y-1 pl-2">
-              <li>1. Tomar ${solucion.volumen.toFixed(1)} mL de ${solucion.nombre}</li>
+              <li>1. Tomar ${solucion.volumen} mL de ${solucion.nombre}</li>
               <li>2. Añadir ${kclMl} mL de KCl 10% (${potasioReq.toFixed(1)} mEq de K)</li>
               <li>3. Mezclar adecuadamente antes de administrar</li>
             </ol>
@@ -657,7 +506,7 @@
       container.innerHTML = "";
       
       soluciones.forEach(sol => {
-        const kclMl = (potasioReq / 1.34).toFixed(1);
+        const kclMl = Math.round((potasioReq / 1.34) * 10) / 10;
         
         const card = document.createElement("div");
         card.className = "solution-card p-4 border border-gray-200 rounded-lg";
@@ -666,7 +515,7 @@
           <p class="text-gray-600 text-xs mb-2">${sol.descripcion}</p>
           
           <div class="text-sm space-y-1">
-            <p><span class="font-medium">Volumen:</span> ${sol.volumen.toFixed(1)} mL</p>
+            <p><span class="font-medium">Volumen:</span> ${sol.volumen} mL</p>
             <p><span class="font-medium">Sodio:</span> ${sol.sodioTotal} mEq</p>
             <p><span class="font-medium">KCl 10%:</span> ${kclMl} mL</p>
             <p><span class="font-medium">Glucosa:</span> ${((sol.glucosaPorLitro * sol.volumen)/1000).toFixed(1)} g</p>
@@ -762,21 +611,6 @@
       const instrucciones = Array.from(solucionElem.querySelectorAll("ol li")).map(li => li.textContent).join('\n   • ');
       const velocidad = solucionElem.querySelector("p:nth-last-of-type(2)").textContent;
       
-      // Obtener fórmulas y bolo si existen
-      let formulasText = "";
-      if (document.getElementById("formulasContainer").classList.contains("hidden") === false) {
-        const formulaBase = Array.from(document.querySelectorAll("#formulaBase ul li")).map(li => li.textContent).join('\n   • ');
-        const formulaAdaptada = Array.from(document.querySelectorAll("#formulaAdaptada ul li")).map(li => li.textContent).join('\n   • ');
-        
-        formulasText = `\n\nFÓRMULA BASE\n   • ${formulaBase}\n\nFÓRMULA ADAPTADA\n   • ${formulaAdaptada}`;
-      }
-      
-      let boloText = "";
-      if (document.getElementById("boloContainer").classList.contains("hidden") === false) {
-        const boloInfo = Array.from(document.querySelectorAll("#boloDetalle ul li")).map(li => li.textContent).join('\n   • ');
-        boloText = `\n\nBOLO INICIAL\n   • ${boloInfo}`;
-      }
-      
       // Construir texto para copiar
       const textoACopiar = `INDICACIÓN DE HIDRATACIÓN PARENTERAL - PEDIATRÍA\n\n` +
                          `DATOS DEL PACIENTE\n` +
@@ -792,11 +626,9 @@
                          
                          `SOLUCIÓN RECOMENDADA\n` +
                          `• ${solucionNombre}\n` +
-                         `• Composición:\n   • ${composicion}` +
+                         `• Composición:\n   • ${composicion}\n\n` +
                          
-                         `${formulasText}` +
-                         `${boloText}` +
-                         `\n\nINSTRUCCIONES DE PREPARACIÓN\n` +
+                         `INSTRUCCIONES DE PREPARACIÓN\n` +
                          `   • ${instrucciones}\n` +
                          `   • ${velocidad}\n\n` +
                          
@@ -888,6 +720,5 @@
       });
     });
   </script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </body>
 </html>
