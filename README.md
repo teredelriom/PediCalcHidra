@@ -28,13 +28,13 @@ Esta aplicación web permite calcular de manera precisa los requerimientos de hi
 - 🖼️ Íconos opcionales para PWA (icon-192.png, icon-512.png, etc.)
 
 ## 🧪 Instrucciones de uso:
-1️⃣ Abrir index.html en un navegador moderno (preferentemente Chrome o Firefox).
-2️⃣ Ingresar peso (en gramos) y edad (en años).
-3️⃣ Seleccionar grado de deshidratación y condiciones clínicas presentes.
-4️⃣ (Opcional) Ingresar electrolitos basales para mayor precisión.
-5️⃣ Presionar "Calcular Hidratación".
-6️⃣ Revisar resultados, solución recomendada, fórmulas y notas clínicas.
-7️⃣ Usar los botones para copiar indicaciones, exportar o imprimir.
+- Abrir index.html en un navegador moderno (preferentemente Chrome o Firefox).
+- Ingresar peso (en gramos) y edad (en años).
+- Seleccionar grado de deshidratación y condiciones clínicas presentes.
+- (Opcional) Ingresar electrolitos basales para mayor precisión.
+- Presionar "Calcular Hidratación".
+- Revisar resultados, solución recomendada, fórmulas y notas clínicas.
+- Usar los botones para copiar indicaciones, exportar o imprimir.
 
 ## 👩‍⚕️ Uso Clínico
 
