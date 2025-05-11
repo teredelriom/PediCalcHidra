@@ -556,6 +556,10 @@
           class="flex-1 btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
           <i class="far fa-image mr-2"></i> Exportar como Imagen
         </button>
+        <button onclick="window.print()" 
+          class="flex-1 btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+          <i class="fas fa-print mr-2"></i> Imprimir
+        </button>
       </div>
     </div>
   </div>
@@ -1108,6 +1112,34 @@
           <li>Glucosa: ${glucosaReq.toFixed(1)} g</li>
         </ul>
       `;
+    }
+
+    // Requerimientos según fórmula de Holliday-Segar incluyendo Cloro
+    function calcularRequerimientosBasales(peso) {
+      let calorias = 0;
+
+      if (peso <= 10) {
+        calorias = peso * 100;
+      } else if (peso <= 20) {
+        calorias = 1000 + (peso - 10) * 50;
+      } else {
+        calorias = 1500 + (peso - 20) * 20;
+      }
+
+      const agua = Math.round(calorias); // 1 cc por cal = 1 mL
+      const sodio = Math.round(calorias * 0.03);   // 3 mEq/100 cal
+      const potasio = Math.round(calorias * 0.025); // 2.5 mEq/100 cal
+      const cloro = Math.round(calorias * 0.05);    // 5 mEq/100 cal
+
+      const caloriasTotales = Math.round(calorias);
+
+      return {
+        agua: Math.round(agua),
+        calorias: caloriasTotales,
+        sodio: Math.round(sodio),
+        potasio: Math.round(potasio),
+        cloro: Math.round(cloro)
+      };
     }
 
     // Inicialización
