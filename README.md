@@ -1,48 +1,34 @@
-## CALCULADORA DE HIDRATACIÓN PEDIÁTRICA v5.2
+# 🧪 Calculadora de Hidratación Pediátrica
 
-## 🩺 Descripción:
-Esta aplicación web permite calcular de manera precisa los requerimientos de hidratación, electrolitos y soluciones intravenosas para pacientes pediátricos. Considera múltiples variables como peso, edad, grado de deshidratación y condiciones clínicas específicas.
+Esta es una herramienta interactiva diseñada para calcular requerimientos de hidratación en pacientes pediátricos, considerando peso, edad, condiciones clínicas y electrolitos.
 
-## ✨ Características principales:
-- Cálculo de mantenimiento, déficit y flujo horario según peso y grado de deshidratación.
-- Ajustes inteligentes según condiciones clínicas como hiponatremia, hipernatremia, oliguria, fiebre, etc.
-- Recomendación automática de solución intravenosa óptima.
-- Comparación de soluciones alternativas.
-- Indicaciones completas para enfermería con instrucciones de preparación.
-- Exportación de resultados como imagen, impresión o copiar al portapapeles.
-- Interfaz adaptativa y moderna con Tailwind CSS.
-- Compatible con instalación como Aplicación Web Progresiva (PWA).
+## 📋 Funcionalidades
 
-## 🛠️ Tecnologías utilizadas:
-- 🧾 HTML5
-- 🎨 Tailwind CSS
-- 🧠 JavaScript Vanilla
-- 🌟 Font Awesome
-- 🖼️ html2canvas (exportar resultados)
-- 📲 PWA con manifest.json y sw.js
+- Cálculo de mantenimiento y déficit según fórmula de Holliday-Segar
+- Adaptación según condiciones clínicas (hiponatremia, hipernatremia, edema, etc.)
+- Cálculo automático de electrolitos y soluciones recomendadas
+- Interfaz responsiva y validación de entradas
+- Modo offline mediante Service Worker (PWA Ready)
 
-## 📁 Archivos esperados en el mismo directorio:
-- 📄 index.html (este archivo)
-- 🔧 sw.js (Service Worker para funcionalidad offline)
-- 📝 manifest.json (para instalación como app)
-- 🖼️ Íconos opcionales para PWA (icon-192.png, icon-512.png, etc.)
+## 🚀 Cómo usar
 
-## 🧪 Instrucciones de uso:
-- Abrir index.html en un navegador moderno (preferentemente Chrome o Firefox).
-- Ingresar peso (en gramos) y edad (en años).
-- Seleccionar grado de deshidratación y condiciones clínicas presentes.
-- (Opcional) Ingresar electrolitos basales para mayor precisión.
-- Presionar "Calcular Hidratación".
-- Revisar resultados, solución recomendada, fórmulas y notas clínicas.
-- Usar los botones para copiar indicaciones, exportar o imprimir.
+1. Abre `index.html` en tu navegador.
+2. Ingresa los datos del paciente (peso, edad, etc.).
+3. Selecciona condiciones clínicas si aplica.
+4. Presiona “Calcular” y revisa los resultados.
 
-## 👩‍⚕️ Uso Clínico
+## 🧩 Requisitos
 
-Esta herramienta está orientada al **uso médico profesional**.
-- El código está optimizado para uso clínico, pero no reemplaza el juicio médico.
-- Las advertencias clínicas se generan automáticamente si hay desviaciones significativas en sodio o condiciones críticas presentes.
-- Todos los cálculos están basados en la fórmula de Holliday-Segar y guías clínicas pediátricas actualizadas.
+- Navegador moderno con soporte para JavaScript
+- Conexión inicial a internet (para funcionalidad offline posterior)
 
-## 📄 Licencia
+## 📦 Estructura del Proyecto
 
-Uso clínico libre. Si reutilizas este código, se agradece atribución al autor original 
+- `index.html`: Página principal con toda la lógica incluida
+- `manifest.json`: Configuración para PWA (icono, nombre, etc.)
+- `README.md`: Este archivo
+
+## ✨ Autor
+
+Desarrollado como herramienta clínica interactiva.
+
