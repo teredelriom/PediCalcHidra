@@ -1,239 +1,706 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW registrado:', reg.scope))
-          .catch(err => console.error('Fallo SW:', err));
-      });
-    }
-  </script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3FB8AF"/>
+  <meta name="description" content="Calculadora de Hidratación Pediátrica - Herramienta para cálculo de fluidos en pacientes pediátricos">
   <title>Calculadora de Hidratación Pediátrica</title>
+  <link rel="manifest" href="manifest.json" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@heroicons/react/solid/esm/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --color-primary: #3FB8AF;
+      --color-primary-light: #7FC7AF;
+      --color-primary-dark: #2E8B84;
+      --color-secondary: #DAD8A7;
+      --color-accent: #FF9E9D;
+      --color-danger: #FF3D7F;
+      --color-success: #7FC7AF;
+      --color-warning: #FF9E9D;
+      --color-light: #f8f9fa;
+      --color-dark: #212529;
+      --color-gray: #6c757d;
+      --color-gray-light: #e9ecef;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      min-height: 100vh;
+      line-height: 1.6;
+      color: var(--color-dark);
+    }
+    
+    .solution-card {
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+    }
+    
+    .solution-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .solution-card.selected {
+      border-left-color: var(--color-danger);
+      background-color: rgba(255, 158, 157, 0.1);
+    }
+    
+    .input-highlight {
+      transition: all 0.3s ease;
+    }
+    
+    .input-highlight:focus {
+      box-shadow: 0 0 0 3px rgba(63, 184, 175, 0.2);
+      border-color: var(--color-primary);
+    }
+    
+    .btn-primary {
+      background-color: var(--color-danger);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #e83572;
+    }
+    
+    .btn-secondary {
+      background-color: var(--color-primary);
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--color-primary-dark);
+    }
+    
+    .btn-tertiary {
+      background-color: var(--color-primary-light);
+      color: white;
+    }
+    
+    .btn-tertiary:hover {
+      background-color: #6fb39b;
+    }
+    
+    .clinical-note {
+      border-left: 4px solid var(--color-warning);
+      background-color: rgba(255, 158, 157, 0.1);
+    }
+    
+    .clinical-note.warning {
+      border-left-color: var(--color-danger);
+      background-color: rgba(255, 61, 127, 0.1);
+    }
+    
+    .clinical-note.success {
+      border-left-color: var(--color-success);
+      background-color: rgba(127, 199, 175, 0.1);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    
+    /* Additional styles from the second file */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    h1, h2, h3, h4 {
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 15px;
+    }
+    
+    h1:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--color-primary);
+      border-radius: 2px;
+    }
+    
+    .result-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-top: 4px solid var(--color-primary);
+    }
+    
+    .result-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .result-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      margin-bottom: 5px;
+    }
+    
+    .result-unit {
+      font-size: 14px;
+      color: var(--color-gray);
+      font-weight: 500;
+    }
+    
+    .formula-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-top: 4px solid var(--color-secondary);
+    }
+    
+    .formula-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .input-with-unit {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    
+    .input-with-unit input {
+      flex: 1;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      padding-right: 50px;
+    }
+    
+    .unit {
+      padding: 0 15px;
+      background: var(--color-gray-light);
+      border: 2px solid var(--color-gray-light);
+      border-left: none;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray);
+    }
+    
+    .solution-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .solution-selector label {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      border: 2px solid var(--color-gray-light);
+      border-radius: 10px;
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 0;
+      font-weight: 400;
+    }
+    
+    .solution-selector label:hover {
+      border-color: var(--color-primary-light);
+      background-color: rgba(58, 134, 255, 0.05);
+    }
+    
+    .solution-selector input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      accent-color: var(--color-primary);
+    }
+    
+    .solution-selected {
+      background-color: rgba(58, 134, 255, 0.1) !important;
+      border-color: var(--color-primary) !important;
+    }
+    
+    .info-text {
+      font-size: 13px;
+      color: var(--color-gray);
+      margin-top: 8px;
+      font-weight: 400;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .offline-status {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--color-danger);
+      color: white;
+      padding: 12px;
+      text-align: center;
+      display: none;
+      font-weight: 500;
+      z-index: 1000;
+    }
+    
+    .install-container {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    
+    .btn-install {
+      background-color: var(--color-secondary);
+    }
+    
+    .btn-install:hover {
+      background-color: #6a2bc0;
+      box-shadow: 0 5px 15px rgba(131, 56, 236, 0.3);
+    }
+    
+    .result-section {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+      
+      .solution-selector {
+        grid-template-columns: 1fr;
+      }
+      
+      .result-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
 </head>
 <body class="p-4 md:p-8">
-  <h1 class="text-2xl font-bold mb-4">Calculadora de Hidratación Pediátrica</h1>
+  <div class="container fade-in">
+    <div id="installContainer" class="install-container hidden">
+      <button id="installBtn" class="btn-tertiary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center mx-auto">
+        <i class="fas fa-download mr-2"></i> Instalar Aplicación
+      </button>
+    </div>
+    
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-[#3FB8AF] mb-6">
+      <i class="fas fa-calculator mr-2"></i>Calculadora de Hidratación Pediátrica
+    </h1>
+    
+    <!-- Formulario de entrada -->
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Peso</label>
+          <div class="input-with-unit">
+            <input type="number" id="peso" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 8500" required>
+            <span class="unit">g</span>
+          </div>
+          <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Edad</label>
+          <div class="input-with-unit">
+            <input type="number" id="edad" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 2" step="0.1" min="0">
+            <span class="unit">años</span>
+          </div>
+        </div>
+      </div>
 
-  <!-- Campos de entrada simulados -->
-  <input id="peso" class="input-highlight border p-2" placeholder="Peso (g)" />
-  <input id="edad" class="input-highlight border p-2" placeholder="Edad (años)" />
-  <input id="tempF" class="input-highlight border p-2 hidden" placeholder="Temp Fiebre (°C)" />
-  <input id="tempA" class="input-highlight border p-2 hidden" placeholder="Temp Ambiente (°C)" />
-  <select id="deshidratacion" class="border p-2">
-    <option value="0.05">5%</option>
-    <option value="0.10">10%</option>
-  </select>
-  <div>
-    <label><input type="checkbox" name="condicionClinica" value="hiponatremia"> Hiponatremia</label>
-    <label><input type="checkbox" name="condicionClinica" value="hipernatremia"> Hipernatremia</label>
-    <label><input type="checkbox" name="condicionClinica" value="edema"> Edema</label>
-    <label><input type="checkbox" name="condicionClinica" value="oliguria"> Oliguria</label>
-  </div>
-  <button id="btnCalcular" onclick="calcular()" class="mt-4 bg-blue-500 text-white px-4 py-2">Calcular</button>
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Grado de deshidratación</label>
+        <select id="deshidratacion" class="w-full input-highlight p-3 border border-gray-300 rounded-lg">
+          <option value="0">Sin deshidratación</option>
+          <option value="50">Leve (3-5%)</option>
+          <option value="75">Moderada (6-9%)</option>
+          <option value="100">Severa (>10%)</option>
+        </select>
+      </div>
 
-  <!-- Resultados -->
-  <div id="resultado" class="hidden mt-4">
-    <div id="mantenimientoResult"></div>
-    <div id="deficitResult"></div>
-    <div id="total24hResult"></div>
-    <div id="flujoHorarioResult"></div>
-    <div id="hollidaySegarResult"></div>
-    <div id="notasClinicas"></div>
-    <div id="solucionRecomendada"></div>
-    <div id="solucionesAlternativas" class="hidden">
-      <h3>💡 Soluciones Alternativas</h3>
-      <div id="listaAlternativas"></div>
+      <!-- Sección de condiciones clínicas -->
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Condiciones clínicas</label>
+        <div id="checkboxes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="fiebre" name="condiciones" value="fiebre" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Fiebre (>37.5°C)</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="ambienteCalido" name="condiciones" value="ambienteCalido" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Ambiente caluroso (>31°C)</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="vm" name="condiciones" value="vm" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Ventilación mecánica</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="hipernatremia" name="condiciones" value="hipernatremia" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Hipernatremia</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="hiponatremia" name="condiciones" value="hiponatremia" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Hiponatremia</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="edema" name="condiciones" value="edema" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Edema</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="oliguria" name="condiciones" value="oliguria" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Oliguria o IRA</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="postq" name="condiciones" value="postq" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Postquirúrgico / Crítico</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="desnutricion" name="condiciones" value="desnutricion" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Desnutrición</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="checkbox" id="hipoglicemia" name="condiciones" value="hipoglicemia" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Hipoglicemia</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="tempFiebre" class="hidden">
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Temperatura corporal</label>
+        <div class="input-with-unit">
+          <input type="number" id="tempF" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 38.5" step="0.1" min="35" max="42">
+          <span class="unit">°C</span>
+        </div>
+      </div>
+      
+      <div id="tempAmbiente" class="hidden">
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-1">Temperatura ambiental</label>
+        <div class="input-with-unit">
+          <input type="number" id="tempA" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 33" step="0.1" min="20" max="50">
+          <span class="unit">°C</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Electrolitos basales (opcional)</label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="input-with-unit">
+            <input type="number" id="naBasal" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Na" step="0.1" min="100" max="200">
+            <span class="unit">mEq/L</span>
+          </div>
+          <div class="input-with-unit">
+            <input type="number" id="kBasal" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="K" step="0.1" min="1" max="10">
+            <span class="unit">mEq/L</span>
+          </div>
+          <div class="input-with-unit">
+            <input type="number" id="clBasal" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Cl" step="0.1" min="70" max="150">
+            <span class="unit">mEq/L</span>
+          </div>
+        </div>
+        <p class="info-text">Ingrese valores basales para ajustar cálculo de electrolitos</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#3FB8AF] mb-2">Solución base</label>
+        <div class="solution-selector" id="solucionSelector">
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="radio" name="solucionBase" value="5" checked class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">SG 5%</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="radio" name="solucionBase" value="10" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">SG 10%</span>
+          </label>
+          <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:border-[#3FB8AF]">
+            <input type="radio" name="solucionBase" value="50" class="h-4 w-4 text-[#3FB8AF] focus:ring-[#3FB8AF] border-gray-300">
+            <span class="ml-2 text-sm text-gray-700">SG 50%</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Botón de cálculo -->
+      <button id="btnCalcular" onclick="calcular()" 
+        class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400">
+        <i class="fas fa-calculator mr-2"></i> Calcular Hidratación
+      </button>
+    </div>
+
+    <!-- Sección de resultados -->
+    <div id="resultado" class="hidden mt-8 space-y-6 fade-in">
+      <div class="bg-[#7FC7AF]/10 rounded-lg p-6 border border-[#7FC7AF]">
+        <h2 class="text-xl font-bold text-[#3FB8AF] mb-4">
+          <i class="fas fa-chart-bar mr-2"></i>Resultados Calculados
+        </h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Mantenimiento</h3>
+            <div class="result-value" id="mantenimientoResult">0</div>
+            <div class="result-unit">mL/24h</div>
+          </div>
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Déficit</h3>
+            <div class="result-value" id="deficitResult">0</div>
+            <div class="result-unit">mL</div>
+          </div>
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Total 24h</h3>
+            <div class="result-value" id="total24hResult">0</div>
+            <div class="result-unit">mL</div>
+          </div>
+          <div class="result-card">
+            <h3 class="text-sm text-[#3FB8AF] mb-1">Flujo horario</h3>
+            <div class="result-value" id="flujoHorarioResult">0</div>
+            <div class="result-unit">mL/h</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solución recomendada -->
+      <div id="solucionRecomendadaContainer" class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-[#3FB8AF] text-white p-4">
+          <h3 class="text-lg font-bold flex items-center">
+            <i class="fas fa-flask mr-2"></i> Solución Intravenosa Recomendada
+          </h3>
+        </div>
+        <div id="solucionRecomendadaDetalle" class="p-4">
+          <!-- Contenido generado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Comparación de soluciones alternativas -->
+      <div id="solucionesAlternativas" class="hidden bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-[#DAD8A7] p-4">
+          <h3 class="text-lg font-bold flex items-center text-[#3FB8AF]">
+            <i class="fas fa-exchange-alt mr-2"></i> Soluciones Alternativas
+          </h3>
+        </div>
+        <div id="solucionesAlternativasDetalle" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Contenido generado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Fórmula Holliday-Segar -->
+      <div class="bg-[#DAD8A7]/10 rounded-lg p-6 border border-[#DAD8A7]">
+        <h3 class="text-lg font-bold text-[#3FB8AF] mb-3">
+          <i class="fas fa-info-circle mr-2 text-[#FF3D7F]"></i>Fórmula Holliday-Segar
+        </h3>
+        <div id="hollidayOriginal" class="text-sm">
+          <!-- Contenido generado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Notas clínicas -->
+      <div id="notasClinicas" class="hidden space-y-3">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex flex-col md:flex-row gap-4">
+        <button onclick="copiarIndicaciones()" 
+          class="flex-1 btn-tertiary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+          <i class="far fa-copy mr-2"></i> Copiar Indicaciones
+        </button>
+        <button onclick="exportarImagen()" 
+          class="flex-1 btn-secondary text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+          <i class="far fa-image mr-2"></i> Exportar como Imagen
+        </button>
+      </div>
     </div>
   </div>
 
-  <div id="estadoConexion" class="text-sm mt-2"></div>
+  <div id="offlineStatus" class="offline-status">
+    Estás trabajando sin conexión. Los cambios se sincronizarán cuando vuelvas a estar en línea.
+  </div>
 
   <script>
-// JavaScript con funciones completas (versión corregida y extendida)
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <link rel="manifest" href="manifest.json">
-  <script>
+    // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW registrado:', reg.scope))
-          .catch(err => console.error('Fallo SW:', err));
-      });
-    }
-  </script>
-
-  <!-- ... (previous head content remains the same) ... -->
-</head>
-<body class="p-4 md:p-8">
-  <!-- ... (previous body content remains the same until the script section) ... -->
-
-  <script>
-    // Constants for validation
-    const MAX_WEIGHT = 50000; // 50kg in grams
-    const MAX_AGE = 18; // Maximum age in years
-    const MIN_TEMP = 35;
-    const MAX_TEMP = 42;
-    const MIN_AMBIENT_TEMP = 20;
-    const MAX_AMBIENT_TEMP = 50;
-
-    // Register Service Worker with improved error handling
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          const registration = await navigator.serviceWorker.register('sw.js');
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          
-          // Check for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('New content available; please refresh.');
-              }
-            });
+          .then(registration => {
+            console.log('ServiceWorker registration successful');
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed: ', err);
           });
-        } catch (err) {
-          console.error('ServiceWorker registration failed: ', err);
+      });
+    }
+
+    // Handle PWA installation
+    let deferredPrompt;
+    const installContainer = document.getElementById('installContainer');
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installContainer.classList.remove('hidden');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installContainer.classList.add('hidden');
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installContainer.classList.add('hidden');
+      deferredPrompt = null;
+    });
+
+    // Online/offline detection
+    function updateOnlineStatus() {
+      const offlineStatus = document.getElementById('offlineStatus');
+      if (navigator.onLine) {
+        offlineStatus.style.display = 'none';
+      } else {
+        offlineStatus.style.display = 'block';
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Function to toggle temperature input fields
+    function toggleTemperaturas() {
+      const checkboxes = document.querySelectorAll('#checkboxes input[type="checkbox"]');
+      const condiciones = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+    
+      const tempFiebre = document.getElementById("tempFiebre");
+      const tempAmbiente = document.getElementById("tempAmbiente");
+    
+      if (tempFiebre) tempFiebre.classList.toggle("hidden", !condiciones.includes("fiebre"));
+      if (tempAmbiente) tempAmbiente.classList.toggle("hidden", !condiciones.includes("ambienteCalido"));
+    }
+
+    // Function to update solution selector UI
+    function updateSolutionSelectorUI() {
+      const soluciones = document.querySelectorAll('#solucionSelector label');
+      soluciones.forEach(sol => {
+        if (sol.querySelector('input').checked) {
+          sol.classList.add('solution-selected');
+        } else {
+          sol.classList.remove('solution-selected');
         }
       });
     }
 
-    // Improved input validation functions
-    function validateWeight(weight) {
-      if (!weight || isNaN(weight)) {
-        return { valid: false, message: "Por favor ingrese un peso válido" };
-      }
-      if (weight < 100) {
-        return { valid: false, message: "El peso mínimo es 100g" };
-      }
-      if (weight > MAX_WEIGHT) {
-        return { valid: false, message: `El peso máximo es ${MAX_WEIGHT/1000}kg` };
-      }
-      return { valid: true };
+    // Function to get selected solution percentage
+    function getSelectedSolutionPercentage() {
+      const selected = document.querySelector('input[name="solucionBase"]:checked');
+      return selected ? parseInt(selected.value) : 5;
     }
 
-    function validateAge(age) {
-      if (age && (isNaN(age) || age < 0)) {
-        return { valid: false, message: "Por favor ingrese una edad válida" };
-      }
-      if (age > MAX_AGE) {
-        return { valid: false, message: `La edad máxima es ${MAX_AGE} años` };
-      }
-      return { valid: true };
-    }
+    // Datos iniciales
+    const condicionesClinicas = [
+      { id: "fiebre", label: "Fiebre (>37.5°C)" },
+      { id: "ambienteCalido", label: "Ambiente caluroso (>31°C)" },
+      { id: "vm", label: "Ventilación mecánica" },
+      { id: "hipernatremia", label: "Hipernatremia" },
+      { id: "hiponatremia", label: "Hiponatremia" },
+      { id: "edema", label: "Edema" },
+      { id: "oliguria", label: "Oliguria o IRA" },
+      { id: "postq", label: "Postquirúrgico / Crítico" },
+      { id: "desnutricion", label: "Desnutrición" },
+      { id: "hipoglicemia", label: "Hipoglicemia" }
+    ];
 
-    function validateTemperature(temp, isBodyTemp = true) {
-      if (!temp || isNaN(temp)) return { valid: false };
-      
-      const min = isBodyTemp ? MIN_TEMP : MIN_AMBIENT_TEMP;
-      const max = isBodyTemp ? MAX_TEMP : MAX_AMBIENT_TEMP;
-      
-      if (temp < min || temp > max) {
-        return { 
-          valid: false,
-          message: `La temperatura debe estar entre ${min}°C y ${max}°C`
-        };
-      }
-      return { valid: true };
-    }
-
-    // Improved error display function
-    function showError(inputElement, message) {
-      const errorElement = document.createElement('p');
-      errorElement.className = 'text-red-500 text-xs mt-1';
-      errorElement.id = `${inputElement.id}-error`;
-      errorElement.textContent = message;
-      
-      // Remove existing error if present
-      const existingError = document.getElementById(`${inputElement.id}-error`);
-      if (existingError) existingError.remove();
-      
-      inputElement.classList.add('border-red-500');
-      inputElement.parentNode.appendChild(errorElement);
-    }
-
-    function clearError(inputElement) {
-      inputElement.classList.remove('border-red-500');
-      const errorElement = document.getElementById(`${inputElement.id}-error`);
-      if (errorElement) errorElement.remove();
-    }
-
-    // Enhanced calcular function with better validation
+    // Función principal de cálculo
     function calcular() {
-      // Clear previous errors
-      document.querySelectorAll('.input-highlight').forEach(input => clearError(input));
-      
-      // Validate inputs
-      const pesoInput = document.getElementById("peso");
-      const peso = parseFloat(pesoInput.value);
-      const pesoValidation = validateWeight(peso);
-      if (!pesoValidation.valid) {
-        showError(pesoInput, pesoValidation.message);
+      const peso = parseFloat(document.getElementById("peso").value);
+      if (!peso || peso < 100) {
+        alert("Por favor ingrese un peso válido (mínimo 100g)");
         return;
       }
 
-      const edadInput = document.getElementById("edad");
-      const edad = parseFloat(edadInput.value) || 0;
-      const edadValidation = validateAge(edad);
-      if (!edadValidation.valid) {
-        showError(edadInput, edadValidation.message);
-        return;
-      }
-
-      // Validate temperatures if visible
-      if (!document.getElementById("tempFiebre").classList.contains("hidden")) {
-        const tempF = parseFloat(document.getElementById("tempF").value);
-        const tempFValidation = validateTemperature(tempF);
-        if (!tempFValidation.valid) {
-          showError(document.getElementById("tempF"), tempFValidation.message);
-          return;
-        }
-      }
-
-      if (!document.getElementById("tempAmbiente").classList.contains("hidden")) {
-        const tempA = parseFloat(document.getElementById("tempA").value);
-        const tempAValidation = validateTemperature(tempA, false);
-        if (!tempAValidation.valid) {
-          showError(document.getElementById("tempA"), tempAValidation.message);
-          return;
-        }
-      }
-
-      // Rest of the calculation logic remains the same...
+      // Calcular requerimientos básicos
       const pesoKg = peso / 1000;
+      const edad = parseFloat(document.getElementById("edad").value) || 0;
       const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
       
       let mantenimiento = calcularMantenimiento(pesoKg);
       const deficit = pesoKg * deficitPct;
       const total24h = mantenimiento + deficit;
       
-      // Update UI with results
+      // Actualizar UI
       document.getElementById("mantenimientoResult").textContent = Math.round(mantenimiento);
       document.getElementById("deficitResult").textContent = Math.round(deficit);
       document.getElementById("total24hResult").textContent = Math.round(total24h);
       document.getElementById("flujoHorarioResult").textContent = (total24h / 24).toFixed(1);
       
-      // Calculate electrolytes with improved validation
+      // Calcular electrolitos
       const calorias = mantenimiento;
       const glucosaReq = calorias * 0.05;
       let sodioReq = calorias * 0.03;
       let potasioReq = calorias * 0.025;
       
-      // Adjust based on conditions
+      // Ajustar según condiciones
       const condiciones = obtenerCondicionesSeleccionadas();
       if (condiciones.includes("hipernatremia")) sodioReq *= 0.5;
       if (condiciones.includes("hiponatremia")) sodioReq *= 1.5;
       if (condiciones.includes("edema") || condiciones.includes("oliguria")) potasioReq *= 0.5;
       
-      // Calculate recommended solution
+      // Calcular solución recomendada
       const { solucionOptima, solucionesAlternativas } = calcularSolucionRecomendada(
         mantenimiento, 
         sodioReq, 
@@ -243,185 +710,420 @@
         edad
       );
       
-      // Show results
+      // Mostrar fórmula Holliday-Segar
       mostrarFormulaHollidaySegar(pesoKg, mantenimiento, sodioReq, potasioReq, glucosaReq);
+      
+      // Mostrar notas clínicas
       mostrarNotasClinicas(solucionOptima, condiciones, edad);
       
+      // Mostrar soluciones alternativas si existen
       if (solucionesAlternativas.length > 0) {
         mostrarSolucionesAlternativas(solucionesAlternativas, potasioReq);
         document.getElementById("solucionesAlternativas").classList.remove("hidden");
       }
       
+      // Mostrar resultados
       document.getElementById("resultado").classList.remove("hidden");
-      
-      // Improve accessibility for screen readers
-      const resultadoSection = document.getElementById("resultado");
-      resultadoSection.setAttribute("aria-live", "polite");
-      resultadoSection.setAttribute("aria-atomic", "true");
     }
 
-    // Enhanced solution calculation with better error handling
+    // Función mejorada para calcular solución recomendada
     function calcularSolucionRecomendada(mantenimiento, sodioReq, potasioReq, glucosaReq, condiciones, edad) {
-      try {
-        // Load solutions from a more maintainable structure
-        const solucionesBase = [
-          { 
-            nombre: "SG 5% + NaCl 0.2%",
-            descripcion: "Solución glucosada al 5% con NaCl 0.2%",
-            sgPorcentaje: 5,
-            naPorLitro: 34,
-            glucosaPorLitro: 50,
-            caloriasPorLitro: 200,
-            tipo: "bajaNa"
-          },
-          // ... other solutions ...
-        ];
-
-        // Evaluate each solution with volume constraints
-        const opciones = solucionesBase.map(sol => {
-          const volumen = Math.min(mantenimiento, (glucosaReq * 1000) / sol.glucosaPorLitro);
-          const sodioTotal = (sol.naPorLitro * volumen) / 1000;
-          const diferenciaSodio = sodioTotal - sodioReq;
-          
-          return {
-            ...sol,
-            volumen: Math.round(volumen),
-            sodioTotal: parseFloat(sodioTotal.toFixed(1)),
-            diferenciaSodio: parseFloat(diferenciaSodio.toFixed(1)),
-            adecuacion: Math.abs(diferenciaSodio)
-          };
-        });
-
-        // Select best option based on conditions
-        let mejorOpcion = opciones[0];
-        let solucionesAlternativas = [];
+      const solucionesBase = [
+        { 
+          nombre: "SG 5% + NaCl 0.2%",
+          descripcion: "Solución glucosada al 5% con NaCl 0.2%",
+          sgPorcentaje: 5,
+          naPorLitro: 34,
+          glucosaPorLitro: 50,
+          caloriasPorLitro: 200,
+          tipo: "bajaNa"
+        },
+        { 
+          nombre: "SG 5% + NaCl 0.45%",
+          descripcion: "Solución glucosada al 5% con NaCl 0.45%",
+          sgPorcentaje: 5,
+          naPorLitro: 77,
+          glucosaPorLitro: 50,
+          caloriasPorLitro: 200,
+          tipo: "normal"
+        },
+        { 
+          nombre: "SG 10% + NaCl 0.2%",
+          descripcion: "Solución glucosada al 10% con NaCl 0.2%",
+          sgPorcentaje: 10,
+          naPorLitro: 34,
+          glucosaPorLitro: 100,
+          caloriasPorLitro: 400,
+          tipo: "bajaNa"
+        },
+        { 
+          nombre: "SG 10% + NaCl 0.3%",
+          descripcion: "Solución glucosada al 10% con NaCl 0.3%",
+          sgPorcentaje: 10,
+          naPorLitro: 51,
+          glucosaPorLitro: 100,
+          caloriasPorLitro: 400,
+          tipo: "normal"
+        }
+      ];
+      
+      // Evaluar cada solución
+      const opciones = solucionesBase.map(sol => {
+        const volumen = Math.min(mantenimiento, (glucosaReq * 1000) / sol.glucosaPorLitro);
+        const sodioTotal = (sol.naPorLitro * volumen) / 1000;
+        const diferenciaSodio = sodioTotal - sodioReq;
         
-        // ... rest of the selection logic ...
+        return {
+          ...sol,
+          volumen: Math.round(volumen),
+          sodioTotal: parseFloat(sodioTotal.toFixed(1)),
+          diferenciaSodio: parseFloat(diferenciaSodio.toFixed(1)),
+          adecuacion: Math.abs(diferenciaSodio)
+        };
+      });
+      
+      // Seleccionar mejor opción según condiciones
+      let mejorOpcion = opciones[0];
+      let solucionesAlternativas = [];
+      
+      if (condiciones.includes("hipernatremia")) {
+        mejorOpcion = opciones.reduce((prev, curr) => 
+          (curr.diferenciaSodio < prev.diferenciaSodio) ? curr : prev);
+        
+        // Agregar alternativas con bajo sodio
+        solucionesAlternativas = opciones
+          .filter(sol => sol.tipo === "bajaNa" && sol.nombre !== mejorOpcion.nombre)
+          .slice(0, 2);
+      } 
+      else if (condiciones.includes("hiponatremia")) {
+        mejorOpcion = opciones.reduce((prev, curr) => 
+          (curr.sodioTotal > prev.sodioTotal) ? curr : prev);
+          
+        // Agregar alternativas con mayor sodio
+        solucionesAlternativas = opciones
+          .filter(sol => sol.tipo === "normal" && sol.nombre !== mejorOpcion.nombre)
+          .slice(0, 2);
+      } 
+      else {
+        // Para pacientes normales, priorizar SG 10% en menores de 1 año
+        if (edad < 1) {
+          mejorOpcion = opciones.find(sol => sol.sgPorcentaje === 10 && sol.tipo === "normal") || 
+                       opciones.reduce((prev, curr) => (curr.adecuacion < prev.adecuacion) ? curr : prev);
+        } else {
+          mejorOpcion = opciones.reduce((prev, curr) => 
+            (curr.adecuacion < prev.adecuacion) ? curr : prev);
+        }
+        
+        // Agregar alternativas con similar adecuación
+        solucionesAlternativas = opciones
+          .filter(sol => sol.nombre !== mejorOpcion.nombre && sol.adecuacion <= 5)
+          .slice(0, 2);
+      }
+      
+      // Calcular KCl necesario
+      const kclMl = Math.round((potasioReq / 1.34) * 10) / 10;
+      
+      // Mostrar en UI
+      mostrarSolucionRecomendada(mejorOpcion, kclMl, potasioReq, condiciones);
+      
+      return { solucionOptima: mejorOpcion, solucionesAlternativas };
+    }
 
-        // Calculate KCl needed
+    // Función para mostrar la solución recomendada en la UI
+    function mostrarSolucionRecomendada(solucion, kclMl, potasioReq, condiciones) {
+      const container = document.getElementById("solucionRecomendadaDetalle");
+      
+      let notasClinicas = "";
+      if (Math.abs(solucion.diferenciaSodio) > 5) {
+        const esExceso = solucion.diferenciaSodio > 0;
+        notasClinicas = `
+          <div class="mt-4 p-3 rounded-md clinical-note ${esExceso ? 'warning' : 'success'}">
+            <p class="font-semibold ${esExceso ? 'text-[#FF3D7F]' : 'text-[#3FB8AF]'}">
+              <i class="fas fa-exclamation-triangle mr-1 ${esExceso ? 'text-[#FF3D7F]' : 'text-[#3FB8AF]'}"></i>
+              Nota Clínica Importante
+            </p>
+            <p class="mt-1 text-sm">
+              Esta solución ${esExceso ? 'aporta' : 'proporciona'} ${Math.abs(solucion.diferenciaSodio).toFixed(1)} mEq 
+              ${esExceso ? 'más' : 'menos'} de sodio que lo requerido.
+            </p>
+            ${condiciones.includes(esExceso ? 'hipernatremia' : 'hiponatremia') ? `
+              <p class="mt-1 text-sm font-medium ${esExceso ? 'text-[#FF3D7F]' : 'text-[#3FB8AF]'}">
+                <i class="fas fa-info-circle mr-1"></i>
+                ${esExceso ? 'Considerar solución con menos sodio para hipernatremia' : 'Considerar solución con más sodio para hiponatremia'}
+              </p>
+            ` : ''}
+          </div>
+        `;
+      }
+      
+      container.innerHTML = `
+        <div class="solution-card selected p-4 mb-4">
+          <h4 class="text-lg font-bold text-[#3FB8AF] mb-2">${solucion.nombre} + KCl</h4>
+          <p class="text-gray-600 text-sm mb-3">${solucion.descripcion}</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="font-semibold text-sm text-[#3FB8AF] mb-1">Composición:</p>
+              <ul class="text-sm space-y-1">
+                <li><span class="font-medium">Volumen total:</span> ${solucion.volumen} mL</li>
+                <li><span class="font-medium">SG ${solucion.sgPorcentaje}%:</span> ${solucion.volumen} mL</li>
+                <li><span class="font-medium">NaCl:</span> ${solucion.nombre.split('+')[1].trim()}</li>
+                <li><span class="font-medium">KCl 10%:</span> ${kclMl} mL (${potasioReq.toFixed(1)} mEq)</li>
+              </ul>
+            </div>
+            
+            <div>
+              <p class="font-semibold text-sm text-[#3FB8AF] mb-1">Aporte nutricional:</p>
+              <ul class="text-sm space-y-1">
+                <li><span class="font-medium">Glucosa:</span> ${((solucion.glucosaPorLitro * solucion.volumen)/1000).toFixed(1)} g</li>
+                <li><span class="font-medium">Sodio:</span> ${solucion.sodioTotal} mEq</li>
+                <li><span class="font-medium">Potasio:</span> ${potasioReq.toFixed(1)} mEq</li>
+                <li><span class="font-medium">Calorías:</span> ${((solucion.caloriasPorLitro * solucion.volumen)/1000).toFixed(0)} kcal</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="mt-4 bg-[#DAD8A7]/10 p-3 rounded border border-[#DAD8A7]">
+            <p class="font-semibold text-sm text-[#3FB8AF] mb-2">Instrucciones de preparación:</p>
+            <ol class="text-sm space-y-1 pl-2">
+              <li>1. Tomar ${solucion.volumen} mL de ${solucion.nombre}</li>
+              <li>2. Añadir ${kclMl} mL de KCl 10% (${potasioReq.toFixed(1)} mEq de K)</li>
+              <li>3. Mezclar adecuadamente antes de administrar</li>
+            </ol>
+            <p class="mt-2 text-sm font-medium">
+              <span class="text-[#FF3D7F]">Velocidad de infusión:</span> ${(solucion.volumen / 24).toFixed(1)} mL/h
+            </p>
+          </div>
+          
+          ${notasClinicas}
+        </div>
+      `;
+    }
+
+    // Mostrar soluciones alternativas
+    function mostrarSolucionesAlternativas(soluciones, potasioReq) {
+      const container = document.getElementById("solucionesAlternativasDetalle");
+      container.innerHTML = "";
+      
+      soluciones.forEach(sol => {
         const kclMl = Math.round((potasioReq / 1.34) * 10) / 10;
         
-        // Show in UI
-        mostrarSolucionRecomendada(mejorOpcion, kclMl, potasioReq, condiciones);
+        const card = document.createElement("div");
+        card.className = "solution-card p-4 border border-gray-200 rounded-lg";
+        card.innerHTML = `
+          <h4 class="text-md font-bold text-[#3FB8AF] mb-1">${sol.nombre} + KCl</h4>
+          <p class="text-gray-600 text-xs mb-2">${sol.descripcion}</p>
+          
+          <div class="text-sm space-y-1">
+            <p><span class="font-medium">Volumen:</span> ${sol.volumen} mL</p>
+            <p><span class="font-medium">Sodio:</span> ${sol.sodioTotal} mEq</p>
+            <p><span class="font-medium">KCl 10%:</span> ${kclMl} mL</p>
+            <p><span class="font-medium">Glucosa:</span> ${((sol.glucosaPorLitro * sol.volumen)/1000).toFixed(1)} g</p>
+          </div>
+          
+          <div class="mt-2 text-xs text-gray-500">
+            <p><span class="font-medium">Diferencia Na:</span> ${sol.diferenciaSodio > 0 ? '+' : ''}${sol.diferenciaSodio} mEq</p>
+          </div>
+        `;
         
-        return { solucionOptima: mejorOpcion, solucionesAlternativas };
-      } catch (error) {
-        console.error("Error calculating recommended solution:", error);
-        // Show error to user
-        alert("Ocurrió un error al calcular la solución recomendada. Por favor intente nuevamente.");
-        return { solucionOptima: null, solucionesAlternativas: [] };
-      }
+        container.appendChild(card);
+      });
     }
 
-    // Enhanced initialization with better event listeners
+    // Mostrar notas clínicas
+    function mostrarNotasClinicas(solucion, condiciones, edad) {
+      const container = document.getElementById("notasClinicas");
+      container.innerHTML = "";
+      container.classList.remove("hidden");
+      
+      let notas = [];
+      
+      // Nota sobre sodio
+      if (Math.abs(solucion.diferenciaSodio) > 5) {
+        const esExceso = solucion.diferenciaSodio > 0;
+        notas.push({
+          tipo: esExceso ? 'warning' : 'success',
+          texto: `Esta solución ${esExceso ? 'aporta' : 'proporciona'} ${Math.abs(solucion.diferenciaSodio).toFixed(1)} mEq ${esExceso ? 'más' : 'menos'} de sodio que lo requerido.`
+        });
+      }
+      
+      // Notas específicas por condición
+      if (condiciones.includes("hipernatremia")) {
+        notas.push({
+          tipo: 'warning',
+          texto: 'Paciente con hipernatremia. Corregir natremia lentamente (< 0.5 mEq/L/hora).'
+        });
+      }
+      
+      if (condiciones.includes("hiponatremia")) {
+        notas.push({
+          tipo: 'warning',
+          texto: 'Paciente con hiponatremia. Corregir natremia lentamente (0.5-1 mEq/L/hora).'
+        });
+      }
+      
+      if (condiciones.includes("oliguria")) {
+        notas.push({
+          tipo: 'warning',
+          texto: 'Paciente con oliguria/IRA. Monitorizar balance hídrico estricto.'
+        });
+      }
+      
+      if (edad < 1) {
+        notas.push({
+          tipo: 'success',
+          texto: 'Paciente menor de 1 año - requerimientos de glucosa más altos.'
+        });
+      }
+      
+      // Mostrar notas en UI
+      notas.forEach(nota => {
+        const noteDiv = document.createElement("div");
+        noteDiv.className = `clinical-note ${nota.tipo} p-3 rounded-md`;
+        noteDiv.innerHTML = `
+          <p class="font-semibold ${nota.tipo === 'warning' ? 'text-[#FF3D7F]' : 'text-[#3FB8AF]'}">
+            <i class="fas fa-info-circle mr-1"></i>
+            Nota Clínica
+          </p>
+          <p class="mt-1 text-sm">${nota.texto}</p>
+        `;
+        container.appendChild(noteDiv);
+      });
+    }
+
+    // Función para copiar indicaciones al portapapeles
+    function copiarIndicaciones() {
+      // Obtener datos del paciente
+      const peso = parseFloat(document.getElementById("peso").value) / 1000;
+      const edad = document.getElementById("edad").value || "No especificada";
+      const condiciones = obtenerCondicionesSeleccionadas().join(", ") || "Ninguna";
+      
+      // Obtener resultados calculados
+      const mantenimiento = document.getElementById("mantenimientoResult").textContent;
+      const deficit = document.getElementById("deficitResult").textContent;
+      const total24h = document.getElementById("total24hResult").textContent;
+      const flujoHorario = document.getElementById("flujoHorarioResult").textContent;
+      
+      // Obtener solución recomendada
+      const solucionElem = document.querySelector("#solucionRecomendadaDetalle .solution-card");
+      const solucionNombre = solucionElem.querySelector("h4").textContent;
+      const composicion = Array.from(solucionElem.querySelectorAll("ul:first-of-type li")).map(li => li.textContent).join('\n   • ');
+      const instrucciones = Array.from(solucionElem.querySelectorAll("ol li")).map(li => li.textContent).join('\n   • ');
+      const velocidad = solucionElem.querySelector("p:nth-last-of-type(2)").textContent;
+      
+      // Construir texto para copiar
+      const textoACopiar = `INDICACIÓN DE HIDRATACIÓN PARENTERAL - PEDIATRÍA\n\n` +
+                         `DATOS DEL PACIENTE\n` +
+                         `• Peso: ${peso.toFixed(3)} kg\n` +
+                         `• Edad: ${edad} años\n` +
+                         `• Condiciones relevantes: ${condiciones}\n\n` +
+                         
+                         `REQUERIMIENTOS CALCULADOS\n` +
+                         `• Mantenimiento: ${mantenimiento} mL/24h\n` +
+                         `• Déficit: ${deficit} mL\n` +
+                         `• Total 24h: ${total24h} mL\n` +
+                         `• Flujo horario: ${flujoHorario} mL/h\n\n` +
+                         
+                         `SOLUCIÓN RECOMENDADA\n` +
+                         `• ${solucionNombre}\n` +
+                         `• Composición:\n   • ${composicion}\n\n` +
+                         
+                         `INSTRUCCIONES DE PREPARACIÓN\n` +
+                         `   • ${instrucciones}\n` +
+                         `   • ${velocidad}\n\n` +
+                         
+                         `OBSERVACIONES\n` +
+                         `• Monitorizar electrolitos séricos (Na, K) cada 24h inicialmente\n` +
+                         `• Controlar balance hídrico estricto\n` +
+                         `• Revaluar requerimientos diariamente\n` +
+                         `• Ajustar según respuesta clínica y laboratorio`;
+      
+      // Copiar al portapapeles
+      navigator.clipboard.writeText(textoACopiar)
+        .then(() => {
+          const btn = document.querySelector("button[onclick='copiarIndicaciones()']");
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-check mr-2"></i> ¡Copiado!';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+          }, 2000);
+        })
+        .catch(err => {
+          console.error("Error al copiar: ", err);
+          alert("No se pudo copiar al portapapeles. Intente manualmente.");
+        });
+    }
+
+    // Función para exportar como imagen
+    function exportarImagen() {
+      const resultado = document.getElementById("resultado");
+      if (!resultado) {
+        alert("No hay resultados para exportar.");
+        return;
+      }
+      
+      // Usar html2canvas para capturar la sección de resultados
+      html2canvas(resultado).then(canvas => {
+        const enlace = document.createElement("a");
+        enlace.download = "indicacion_hidratacion.png";
+        enlace.href = canvas.toDataURL();
+        enlace.click();
+      });
+    }
+
+    // Funciones auxiliares
+    function calcularMantenimiento(pesoKg) {
+      if (pesoKg <= 10) return pesoKg * 100;
+      if (pesoKg <= 20) return 1000 + (pesoKg - 10) * 50;
+      return 1500 + (pesoKg - 20) * 20;
+    }
+
+    function obtenerCondicionesSeleccionadas() {
+      return Array.from(document.querySelectorAll('#checkboxes input[type="checkbox"]:checked'))
+             .map(cb => cb.value);
+    }
+
+    function mostrarFormulaHollidaySegar(pesoKg, mantenimiento, sodioReq, potasioReq, glucosaReq) {
+      const container = document.getElementById("hollidayOriginal");
+      
+      let formula = "";
+      if (pesoKg <= 10) {
+        formula = `${pesoKg.toFixed(2)} kg × 100 mL/kg/día = ${(pesoKg*100).toFixed(0)} mL/día`;
+      } else if (pesoKg <= 20) {
+        formula = `Primeros 10kg: 1000 mL + ${(pesoKg-10).toFixed(2)} kg × 50 mL/kg/día = ${mantenimiento.toFixed(0)} mL/día`;
+      } else {
+        formula = `Primeros 10kg: 1000 mL + Siguientes 10kg: 500 mL + ${(pesoKg-20).toFixed(2)} kg × 20 mL/kg/día = ${mantenimiento.toFixed(0)} mL/día`;
+      }
+      
+      container.innerHTML = `
+        <p class="font-medium mb-2">Mantenimiento base:</p>
+        <p class="text-sm bg-white p-2 rounded border border-[#DAD8A7] mb-4">${formula}</p>
+        
+        <p class="font-medium mb-2">Requerimientos diarios:</p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+          <li>Líquidos: ${Math.round(mantenimiento)} mL</li>
+          <li>Calorías: ${Math.round(mantenimiento)} kcal</li>
+          <li>Sodio: ${sodioReq.toFixed(1)} mEq (≈ ${Math.round(sodioReq * 58.44)} mg NaCl)</li>
+          <li>Potasio: ${potasioReq.toFixed(1)} mEq (≈ ${Math.round(potasioReq * 74.55)} mg KCl)</li>
+          <li>Glucosa: ${glucosaReq.toFixed(1)} g</li>
+        </ul>
+      `;
+    }
+
+    // Inicialización
     document.addEventListener("DOMContentLoaded", () => {
       updateSolutionSelectorUI();
       
-      // Improved input validation
+      // Validar peso para habilitar botón de cálculo
       document.getElementById("peso").addEventListener("input", function() {
-        const validation = validateWeight(parseFloat(this.value));
-        if (!validation.valid && this.value) {
-          showError(this, validation.message);
-        } else {
-          clearError(this);
-        }
-        document.getElementById("btnCalcular").disabled = !validation.valid;
+        document.getElementById("btnCalcular").disabled = !this.value || parseFloat(this.value) < 100;
       });
 
-      document.getElementById("edad").addEventListener("input", function() {
-        const validation = validateAge(parseFloat(this.value));
-        if (!validation.valid && this.value) {
-          showError(this, validation.message);
-        } else {
-          clearError(this);
-        }
+      // Toggle temperature inputs when conditions change
+      document.querySelectorAll('#checkboxes input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', toggleTemperaturas);
       });
-
-      // Add ARIA attributes for better accessibility
-      document.querySelectorAll('[id^="temp"]').forEach(input => {
-        input.setAttribute('aria-describedby', `${input.id}-label`);
-      });
-
-      // Enhanced offline status detection
-      updateOnlineStatus();
-      window.addEventListener('online', () => {
-        updateOnlineStatus();
-        // Optional: Show a "back online" message
-        const onlineStatus = document.createElement('div');
-        onlineStatus.className = 'fixed bottom-0 left-0 right-0 bg-green-500 text-white p-2 text-center';
-        onlineStatus.textContent = 'Conexión restablecida. Los datos se han sincronizado.';
-        document.body.appendChild(onlineStatus);
-        setTimeout(() => onlineStatus.remove(), 3000);
-      });
-      window.addEventListener('offline', updateOnlineStatus);
     });
-
-    // ... rest of the existing functions remain the same ...
-  </script>
-</body>
-</html>
-
-// Funciones agregadas
-function obtenerCondicionesSeleccionadas() {
-  const checkboxes = document.querySelectorAll('input[name="condicionClinica"]:checked');
-  return Array.from(checkboxes).map(cb => cb.value);
-}
-
-function mostrarFormulaHollidaySegar(pesoKg, mantenimiento, sodio, potasio, glucosa) {
-  const output = \`
-    <p><strong>Requerimientos según Holliday-Segar:</strong></p>
-    <ul class="list-disc ml-5">
-      <li>Agua: \${Math.round(mantenimiento)} ml/24h</li>
-      <li>Sodio: \${sodio.toFixed(1)} mEq</li>
-      <li>Potasio: \${potasio.toFixed(1)} mEq</li>
-      <li>Glucosa: \${glucosa.toFixed(1)} g</li>
-    </ul>
-  \`;
-  document.getElementById("hollidaySegarResult").innerHTML = output;
-}
-
-function mostrarNotasClinicas(solucion, condiciones, edad) {
-  const notas = [];
-  if (condiciones.includes("hiponatremia")) notas.push("⚠️ Considerar corrección lenta de hiponatremia.");
-  if (condiciones.includes("hipernatremia")) notas.push("⚠️ Reducción de sodio para evitar sobrecorrección.");
-  if (edad < 1) notas.push("👶 Requiere mayor vigilancia en menores de 1 año.");
-  const result = \`
-    <p><strong>Notas clínicas:</strong></p>
-    <ul class="list-disc ml-5">\${notas.map(n => \`<li>\${n}</li>\`).join("")}</ul>
-  \`;
-  document.getElementById("notasClinicas").innerHTML = result;
-}
-
-function mostrarSolucionRecomendada(solucion, kclMl, potasioReq, condiciones) {
-  const resultado = \`
-    <p><strong>Solución Recomendada:</strong> \${solucion.nombre}</p>
-    <p>\${solucion.descripcion}</p>
-    <p>KCl: \${kclMl} ml (≈ \${potasioReq.toFixed(1)} mEq)</p>
-  \`;
-  document.getElementById("solucionRecomendada").innerHTML = resultado;
-}
-
-function mostrarSolucionesAlternativas(soluciones, potasioReq) {
-  const lista = soluciones.map(sol => \`
-    <li>
-      <strong>\${sol.nombre}</strong> - Na: \${sol.naPorLitro} mEq/L, Glucosa: \${sol.glucosaPorLitro} g/L<br/>
-      Volumen: \${sol.volumen} ml, KCl: \${(potasioReq / 1.34 * 10).toFixed(1)} ml
-    </li>
-  \`).join("");
-  document.getElementById("listaAlternativas").innerHTML = \`<ul class="list-disc ml-5">\${lista}</ul>\`;
-}
-
-function updateSolutionSelectorUI() {
-  console.log("Interfaz de selección de soluciones actualizada");
-}
-
-function updateOnlineStatus() {
-  const statusElement = document.getElementById("estadoConexion");
-  if (!statusElement) return;
-  const online = navigator.onLine;
-  statusElement.textContent = online ? "🟢 Conectado" : "🔴 Sin conexión";
-  statusElement.className = online ? "text-green-600" : "text-red-600";
-}
   </script>
 </body>
 </html>
