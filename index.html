@@ -7,11 +7,11 @@
   <meta name="description" content="Calculadora de Hidratación Pediátrica - Herramienta para cálculo de fluidos en pacientes pediátricos">
   <title>Calculadora de Hidratación Pediátrica</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="shortcut icon" type="image/x-icon" href="bebe.png">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="shortcut icon" type="image/x-icon" href="bebe.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@heroicons/react/solid/esm/index.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -114,7 +114,6 @@
       animation: fadeIn 0.5s ease-out forwards;
     }
     
-    /* Additional styles from the second file */
     .container {
       max-width: 900px;
       margin: 0 auto;
@@ -349,6 +348,7 @@
             <span class="unit">g</span>
           </div>
           <p class="info-text">Ingrese peso en gramos (ej. 8500 para 8kg 500g)</p>
+          <p id="peso-error" class="text-red-500 text-xs mt-1 hidden"></p>
         </div>
         
         <div>
@@ -357,6 +357,7 @@
             <input type="number" id="edad" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 2" step="0.1" min="0">
             <span class="unit">años</span>
           </div>
+          <p id="edad-error" class="text-red-500 text-xs mt-1 hidden"></p>
         </div>
       </div>
 
@@ -423,6 +424,7 @@
           <input type="number" id="tempF" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 38.5" step="0.1" min="35" max="42">
           <span class="unit">°C</span>
         </div>
+        <p id="tempF-error" class="text-red-500 text-xs mt-1 hidden"></p>
       </div>
       
       <div id="tempAmbiente" class="hidden">
@@ -431,6 +433,7 @@
           <input type="number" id="tempA" class="w-full input-highlight p-3 border border-gray-300 rounded-lg" placeholder="Ej: 33" step="0.1" min="20" max="50">
           <span class="unit">°C</span>
         </div>
+        <p id="tempA-error" class="text-red-500 text-xs mt-1 hidden"></p>
       </div>
 
       <div>
@@ -570,16 +573,33 @@
   </div>
 
   <script>
+    // Constants for validation
+    const MAX_WEIGHT = 50000; // 50kg in grams
+    const MAX_AGE = 18; // Maximum age in years
+    const MIN_TEMP = 35;
+    const MAX_TEMP = 42;
+    const MIN_AMBIENT_TEMP = 20;
+    const MAX_AMBIENT_TEMP = 50;
+
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(registration => {
-            console.log('ServiceWorker registration successful');
-          })
-          .catch(err => {
-            console.log('ServiceWorker registration failed: ', err);
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('sw.js');
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New content available; please refresh.');
+              }
+            });
           });
+        } catch (err) {
+          console.error('ServiceWorker registration failed: ', err);
+        }
       });
     }
 
@@ -610,19 +630,64 @@
       deferredPrompt = null;
     });
 
-    // Online/offline detection
-    function updateOnlineStatus() {
-      const offlineStatus = document.getElementById('offlineStatus');
-      if (navigator.onLine) {
-        offlineStatus.style.display = 'none';
-      } else {
-        offlineStatus.style.display = 'block';
+    // Improved input validation functions
+    function validateWeight(weight) {
+      if (!weight || isNaN(weight)) {
+        return { valid: false, message: "Por favor ingrese un peso válido" };
+      }
+      if (weight < 100) {
+        return { valid: false, message: "El peso mínimo es 100g" };
+      }
+      if (weight > MAX_WEIGHT) {
+        return { valid: false, message: `El peso máximo es ${MAX_WEIGHT/1000}kg` };
+      }
+      return { valid: true };
+    }
+
+    function validateAge(age) {
+      if (age && (isNaN(age) || age < 0)) {
+        return { valid: false, message: "Por favor ingrese una edad válida" };
+      }
+      if (age > MAX_AGE) {
+        return { valid: false, message: `La edad máxima es ${MAX_AGE} años` };
+      }
+      return { valid: true };
+    }
+
+    function validateTemperature(temp, isBodyTemp = true) {
+      if (!temp || isNaN(temp)) return { valid: false };
+      
+      const min = isBodyTemp ? MIN_TEMP : MIN_AMBIENT_TEMP;
+      const max = isBodyTemp ? MAX_TEMP : MAX_AMBIENT_TEMP;
+      
+      if (temp < min || temp > max) {
+        return { 
+          valid: false,
+          message: `La temperatura debe estar entre ${min}°C y ${max}°C`
+        };
+      }
+      return { valid: true };
+    }
+
+    // Improved error display function
+    function showError(inputId, message) {
+      const inputElement = document.getElementById(inputId);
+      const errorElement = document.getElementById(`${inputId}-error`);
+      
+      if (inputElement) inputElement.classList.add('border-red-500');
+      if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
       }
     }
 
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
+    function clearError(inputId) {
+      const inputElement = document.getElementById(inputId);
+      const errorElement = document.getElementById(`${inputId}-error`);
+      
+      if (inputElement) inputElement.classList.remove('border-red-500');
+      if (errorElement) errorElement.classList.add('hidden');
+    }
 
     // Function to toggle temperature input fields
     function toggleTemperaturas() {
@@ -670,17 +735,47 @@
       { id: "hipoglicemia", label: "Hipoglicemia" }
     ];
 
-    // Función principal de cálculo
+    // Enhanced calcular function with better validation
     function calcular() {
+      // Clear previous errors
+      ['peso', 'edad', 'tempF', 'tempA'].forEach(id => clearError(id));
+      
+      // Validate inputs
       const peso = parseFloat(document.getElementById("peso").value);
-      if (!peso || peso < 100) {
-        alert("Por favor ingrese un peso válido (mínimo 100g)");
+      const pesoValidation = validateWeight(peso);
+      if (!pesoValidation.valid) {
+        showError("peso", pesoValidation.message);
         return;
+      }
+
+      const edad = parseFloat(document.getElementById("edad").value) || 0;
+      const edadValidation = validateAge(edad);
+      if (!edadValidation.valid) {
+        showError("edad", edadValidation.message);
+        return;
+      }
+
+      // Validate temperatures if visible
+      if (!document.getElementById("tempFiebre").classList.contains("hidden")) {
+        const tempF = parseFloat(document.getElementById("tempF").value);
+        const tempFValidation = validateTemperature(tempF);
+        if (!tempFValidation.valid) {
+          showError("tempF", tempFValidation.message);
+          return;
+        }
+      }
+
+      if (!document.getElementById("tempAmbiente").classList.contains("hidden")) {
+        const tempA = parseFloat(document.getElementById("tempA").value);
+        const tempAValidation = validateTemperature(tempA, false);
+        if (!tempAValidation.valid) {
+          showError("tempA", tempAValidation.message);
+          return;
+        }
       }
 
       // Calcular requerimientos básicos
       const pesoKg = peso / 1000;
-      const edad = parseFloat(document.getElementById("edad").value) || 0;
       const deficitPct = parseFloat(document.getElementById("deshidratacion").value);
       
       let mantenimiento = calcularMantenimiento(pesoKg);
@@ -1143,19 +1238,49 @@
       };
     }
 
+    // Online/offline detection
+    function updateOnlineStatus() {
+      const offlineStatus = document.getElementById('offlineStatus');
+      if (navigator.onLine) {
+        offlineStatus.style.display = 'none';
+      } else {
+        offlineStatus.style.display = 'block';
+      }
+    }
+
     // Inicialización
     document.addEventListener("DOMContentLoaded", () => {
       updateSolutionSelectorUI();
       
       // Validar peso para habilitar botón de cálculo
       document.getElementById("peso").addEventListener("input", function() {
-        document.getElementById("btnCalcular").disabled = !this.value || parseFloat(this.value) < 100;
+        const validation = validateWeight(parseFloat(this.value));
+        if (!validation.valid && this.value) {
+          showError("peso", validation.message);
+        } else {
+          clearError("peso");
+        }
+        document.getElementById("btnCalcular").disabled = !validation.valid;
+      });
+
+      document.getElementById("edad").addEventListener("input", function() {
+        const validation = validateAge(parseFloat(this.value));
+        if (!validation.valid && this.value) {
+          showError("edad", validation.message);
+        } else {
+          clearError("edad");
+        }
       });
 
       // Toggle temperature inputs when conditions change
       document.querySelectorAll('#checkboxes input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('change', toggleTemperaturas);
       });
+
+      // Online/offline detection
+      updateOnlineStatus();
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
     });
   </script>
 </body>
